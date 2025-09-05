@@ -14,7 +14,7 @@ dist/*
 /build
 
 # Data #
-data/
+#data/
 datasets/
 
 # Generic #
