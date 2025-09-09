@@ -6,27 +6,42 @@
 # ⚠️ Compatibility Notice
 
 This project requires **Python 3.8**.  
+Update: works on **Python 3.9.21** using `torch==1.12.1+cpu`.
+
 The latest tested working version of the **`transformers`** library is **4.29.2**,  
 since newer releases require Python 3.9+.
 
 ### 1. Create virtual environment (recommended)
+- **Linux / macOS / WSL** / Windows (cmd / powershell)
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
+- nb! make sure python version is 3.8, if not do `python3.8` or ``python3.9``
 
 ### 2. Activate virtual environment (recommended)
 - **Bash / WSL / macOS**
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
+
 - **Windows (Command Prompt)**
 ```cmd
-venv\Scripts\activate
+.venv\Scripts\activate.bat
+```
+
+- ***Windows (Powershell)***
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
+For editing code:
 ```bash
-pip install -r requirements.txt
+pip install -e .
+```
+For general usage:
+```bash
+pip install .
 ```
 
 ### 4. Set source-path
@@ -34,14 +49,20 @@ pip install -r requirements.txt
 ```bash
 export PYTHONPATH=$PYTHONPATH:src
 ```
-- **Windows (PowerShell)**
+
+- **Windows (Command Prompt)**
+```cmd
+set PYTHONPATH=%PYTHONPATH%;src
+```
+
+- **Windows (Powershell)**
 ```powershell
-$env:PYTHONPATH="$env:PYTHONPATH;src"
+$env:PYTHONPATH += ";src"
 ```
 
 ### 5. Run!
 ```bash
-python3 my_tests/run_refined.py
+python my_tests/run_refined.py
 ```
 
 ### Deactivate virtual environment

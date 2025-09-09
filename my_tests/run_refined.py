@@ -1,5 +1,8 @@
+
+# testing and entity linking
 from my_tests.process_file import process_csv
 from refined.inference.processor import Refined
+
 
 #############################################################################################
 # Fetches candidate descriptions (ONLINE)
@@ -30,10 +33,6 @@ def fetch_wikidata_labels(qids):
 
 #############################################################################################
 
-
-refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
-                                  entity_set="wikipedia")
-
 # texts = [
 #     "England won the FIFA World Cup in 1966.",
 #     "Barack Obama was the 44th President of the United States.",
@@ -44,6 +43,9 @@ refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
 # ]
 
 texts = process_csv("my_tests/data/imdb_top_100.csv")
+
+refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
+                                  entity_set="wikipedia")
 
 
 for text in texts[:5]:  # Test first 5 rows
@@ -74,3 +76,4 @@ for text in texts[:5]:  # Test first 5 rows
                 print(f"  - {candidate_name} (QID: {candidate_qid}), score: {score * 100:.2f}%")
 
         print("\n")
+print("\n\n")
