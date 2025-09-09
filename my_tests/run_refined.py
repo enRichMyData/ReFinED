@@ -31,6 +31,7 @@ def fetch_wikidata_labels(qids):
     return labels
 
 
+# NOTE Bytt ut dette kallet med fungerende LamAPI kall !
 #############################################################################################
 
 # texts = [
@@ -49,31 +50,51 @@ refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
 
 
 for text in texts[:5]:  # Test first 5 rows
-    print(f'\n{text}')
+    print("\n" + "=" * 100)
+    print(f"{text}\n")
 
     spans = refined.process_text(text)
     for span in spans:
-        print(f"  {span.text} → {getattr(span.predicted_entity, 'wikipedia_entity_title', None)}")
+        pred_ent = span.predicted_entity
+        pred_qid = getattr(pred_ent, "wikidata_entity_id", None)
+        pred_title = getattr(pred_ent, "wikipedia_entity_title", None)
 
-        # Numerical Entity Types & Normalization
-        if span.coarse_type != "MENTION":
-            print(f"    Type: {span.coarse_type}")
+        print(f"  Mention: [{span.text}]", end="")
+        print(f"  →  Predicted entity: [{pred_title} (QID: {pred_qid})]")
+        print(f"    Type: {span.coarse_type}")
+
+        # Confidence from candidates
+        if span.candidate_entities:
+            confidence = None
+            for qid, score in span.candidate_entities:
+                if qid == pred_qid:
+                    confidence = score
+                    break
+            if confidence is not None:
+                print(f"    Model confidence: {confidence * 100:.2f}%")
+            else:
+                print("    Model confidence: N/A")
+        else:
+            print("    No candidate entities (likely numerical).")
+
+        # Normalized DATE
         if span.coarse_type == "DATE":
             print(f"    Normalized date: {span.date}")
 
-        # Knowledge Graphs
-        qid = getattr(span.predicted_entity, 'wikidata_entity_id', None)
-        print(f"    ({span.text}) linked to Wikidata QID: {qid}")
-
         # Top-k candidates
         if span.candidate_entities:
-            print(" Candidate entities:")
+            print("    Top-k candidate entities:")
             qids = [qid for qid, _ in span.candidate_entities[:5]]
             labels = fetch_wikidata_labels(qids)
 
             for candidate_qid, score in span.candidate_entities[:5]:
                 candidate_name = labels.get(candidate_qid, candidate_qid)
-                print(f"  - {candidate_name} (QID: {candidate_qid}), score: {score * 100:.2f}%")
+                print(f"      - {candidate_name} (QID: {candidate_qid}), score: {score * 100:.2f}%")
 
-        print("\n")
-print("\n\n")
+        print("-" * 60)
+
+        # NOTE!
+        # For Top-K candidates: 
+        # - span.predicted_entity is the _final_ entity the model chooses after considering full context. This is the most correct link.
+        # - span.candidate_entities are raw retrieval scores based on lexical or embedding similarity, not the final conidence scores.
+        

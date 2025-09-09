@@ -1,20 +1,25 @@
 import pandas as pd
 
-
 def process_csv(file_path):
     df = pd.read_csv(file_path)
 
     print(f'Loaded {len(df)} rows with columns: {list(df.columns)}')
 
-    # NB! bruker bare "tittel" "relase year" og "overview" for øyeblikket
-    # er totalt 11 kolonner
     processed_texts = [
-        f"{row['Series_Title']} released in {row['Released_Year']}. {row['Overview']}"
+        (
+            f"{row['Series_Title']} released in {row['Released_Year']}.\n"
+            f"Overview: {row['Overview']}\n"
+            f"Directed by {row['Director']}.\n"
+            f"Starring: {row['Star1']}.\n"
+            f"Genre: {row['Genre']}.\n"
+            f"Runtime: {row['Runtime (min)']} minutes.\n"
+            f'"IMDb" rating: {row["IMDB_Rating"]}, "Metascore": {row["Meta_score"]}.\n'
+            f"Votes: {row['No_of_Votes']}, Gross: {row['Gross']}."
+        )
         for _, row in df.iterrows()
     ]
 
     return processed_texts
-
 
 if __name__ == "__main__":
     texts = process_csv("data/imdb_top_100.csv")
