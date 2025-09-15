@@ -4,6 +4,8 @@
 
 from my_tests.process_file import process_csv
 from refined.inference.processor import Refined
+import sys
+import os
 import time
 import cProfile, pstats
 import tracemalloc
@@ -12,11 +14,26 @@ import torch
 import numpy as np
 
 
+
 # ================== CONFIG ==================
-TEXT_FILE = "my_tests/data/imdb_top_100.csv"
-NUM_TEXTS = 100           # Number of texts to benchmark
 REPEAT_RUNS = 3           # Repeat runs to account for cold start
 TOP_STATS = 20            # Number of cProfile functions to show
+DEFAULT_DATA_FOLDER = "my_tests/data"
+
+# ================== HANDLE COMMAND-LINE ARGUMENT ==================
+if len(sys.argv) < 2:
+    print(f"Usage: python {sys.argv[0]} <input_file>")
+    print(f"Supported files:\n- 'imdb_top_100.csv'\n- 'companies_test.csv'")
+    sys.exit(1)
+ 
+TEXT_FILE = sys.argv[1]
+ 
+if not os.path.exists(TEXT_FILE):
+    TEXT_FILE = os.path.join(DEFAULT_DATA_FOLDER, TEXT_FILE)
+    if not os.path.exists(TEXT_FILE):
+        print(f"File not found: {TEXT_FILE}")
+        sys.exit(1)
+print(f"[INFO] Using input file: {TEXT_FILE}")
 
 
 # ================== LOAD DATA ==================
@@ -49,7 +66,7 @@ print("\n[Manual Timing & Per-Text Timing]")
 per_text_times = []
 start_total = time.perf_counter()
 
-for t in texts[:NUM_TEXTS]:
+for t in texts:
     start = time.perf_counter()
     refined.process_text(t)
     per_text_times.append(time.perf_counter() - start)
@@ -57,14 +74,14 @@ for t in texts[:NUM_TEXTS]:
 end_total = time.perf_counter()
 total_time = end_total - start_total
 
-print(f"Processed {NUM_TEXTS} texts in {total_time:.2f}s")
+print(f"Processed {len(texts)} texts in {total_time:.2f}s")
 print(f"Average per-text: {sum(per_text_times)/len(per_text_times):.4f}s")
 print(f"Min: {min(per_text_times):.4f}s, Max: {max(per_text_times):.4f}s")
 
 
 # ================== PEAK MEMORY ==================
 tracemalloc.start()
-run_refined(texts[:NUM_TEXTS])
+run_refined(texts)
 _, peak_memory = tracemalloc.get_traced_memory()
 print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
 tracemalloc.stop()
@@ -74,7 +91,7 @@ tracemalloc.stop()
 print("\n[cProfile Profiling]")
 profiler = cProfile.Profile()
 profiler.enable()
-run_refined(texts[:NUM_TEXTS])
+run_refined(texts)
 profiler.disable()
 
 stats = pstats.Stats(profiler).sort_stats('cumtime')
@@ -86,7 +103,7 @@ print("\n[Repeat Runs Timing]")
 repeat_times = []
 for i in range(REPEAT_RUNS):
     start = time.perf_counter()
-    run_refined(texts[:NUM_TEXTS])
+    run_refined(texts)
     end = time.perf_counter()
     repeat_times.append(end - start)
     print(f"Run {i+1}: {end - start:.2f}s")
