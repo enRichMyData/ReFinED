@@ -43,19 +43,19 @@ def fetch_wikidata_labels(qids):
 #     "Jordan met with Apple in Washington last week."
 # ]
 
-texts = process_csv("my_tests/data/imdb_top_100.csv")
+texts = process_csv("my_tests/data/companies_test.csv")
 
 refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
                                   entity_set="wikipedia")
 
 
-for text in texts[:5]:  # Test first 5 rows
+for text in texts[:2]:  # Test first 5 rows
     print("\n" + "=" * 100)
     print(f"{text}\n")
 
     spans = refined.process_text(text)
     for span in spans:
-        pred_ent = span.predicted_entity
+        pred_ent = span.predicted_entity # <-- main predicted entity
         pred_qid = getattr(pred_ent, "wikidata_entity_id", None)
         pred_title = getattr(pred_ent, "wikipedia_entity_title", None)
 
