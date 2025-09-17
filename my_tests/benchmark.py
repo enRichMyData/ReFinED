@@ -4,7 +4,6 @@
 
 from my_tests.process_file import process_csv
 from refined.inference.processor import Refined
-import sys
 import os
 import time
 import cProfile, pstats
@@ -12,6 +11,7 @@ import tracemalloc
 import sys
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -20,96 +20,154 @@ REPEAT_RUNS = 3           # Repeat runs to account for cold start
 TOP_STATS = 20            # Number of cProfile functions to show
 DEFAULT_DATA_FOLDER = "my_tests/data"
 
-# ================== HANDLE COMMAND-LINE ARGUMENT ==================
-if len(sys.argv) < 2:
-    print(f"Usage: python {sys.argv[0]} <input_file>")
-    print(f"Supported files:\n- 'imdb_top_100.csv'\n- 'companies_test.csv'")
-    sys.exit(1)
- 
-TEXT_FILE = sys.argv[1]
- 
-if not os.path.exists(TEXT_FILE):
-    TEXT_FILE = os.path.join(DEFAULT_DATA_FOLDER, TEXT_FILE)
-    if not os.path.exists(TEXT_FILE):
-        print(f"File not found: {TEXT_FILE}")
+# ================== UTILITY FUNCTIONS ==================
+def load_input_file(filename: str):
+    """Loads CSV file from command line or default data folder."""
+    if not os.path.exists(filename):
+        filename = os.path.join(DEFAULT_DATA_FOLDER, filename)
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"File not found: {filename}")
+    print(f"[INFO] Using input file: {filename}")
+    return process_csv(filename)
+
+def load_model():
+    """Loads ReFinED pre-trained model."""
+    print("[INFO] Loading ReFinED model...")
+    return Refined.from_pretrained(
+        model_name='wikipedia_model_with_numbers',
+        entity_set="wikipedia"
+    )
+
+def run_refined(texts, model):
+    """Process a list of texts through ReFinED."""
+    return [model.process_text(t) for t in texts]
+
+
+# ================== TEST FUNCTIONS ==================
+def print_environment_info():
+    print("\n[Environment Info]")
+    print("Python:", sys.version)
+    print("PyTorch:", torch.__version__)
+    print("NumPy:", np.__version__)
+
+def manual_timing(texts, model):
+    """Measure per-text and total runtime."""
+    print("\n[Manual Timing & Per-Text Timing]")
+    per_text_times = []
+    start_total = time.perf_counter()
+
+    for t in texts:
+        start = time.perf_counter()
+        model.process_text(t)
+        per_text_times.append(time.perf_counter() - start)
+
+    total_time = time.perf_counter() - start_total
+
+    print(f"Processed {len(texts)} texts in {total_time:.2f}s")
+    print(f"Average per-text: {sum(per_text_times)/len(per_text_times):.4f}s")
+    print(f"Min: {min(per_text_times):.4f}s, Max: {max(per_text_times):.4f}s")
+
+def peak_memory_usage(texts, model):
+    """Measure peak memory usage of Python allocations."""
+    print("\n[Peak Memory Usage]")
+
+    tracemalloc.start()
+    run_refined(texts, model)
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
+
+def cprofile_profiling(texts, model, top_stats=TOP_STATS):
+    """Profile the processing using cProfile."""
+    print("\n[cProfile Profiling]")
+    profiler = cProfile.Profile()
+    profiler.enable()
+    run_refined(texts, model)
+    profiler.disable()
+
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    stats.print_stats(top_stats)
+
+def repeat_runs_timing(texts, model, repeat_runs=REPEAT_RUNS):
+    """Run multiple times to account for warmup effects."""
+    print("\n[Repeat Runs Timing]")
+    repeat_times = []
+
+    for i in range(repeat_runs):
+        start = time.perf_counter()
+        run_refined(texts, model)
+        end = time.perf_counter()
+        repeat_times.append(end - start)
+        print(f"Run {i+1}: {end - start:.2f}s")
+
+    avg_time = sum(repeat_times) / repeat_runs
+
+    print(f"Average over {repeat_runs} runs: {avg_time:.2f}s\n")
+
+def warmup_and_repeat_runs(texts, model, num_runs=6):
+    """
+    Measures sequential runs including the first warmup run.
+    The first run typically takes longer, whereas the rest benefit from caching and preloaded model.
+    """
+    print(f"\n[Warmup + Repeat Runs Timing] ({num_runs} runs)")
+    run_times = []
+
+    for i in range(num_runs):
+        start = time.perf_counter()
+        run_refined(texts, model)
+        end = time.perf_counter()
+        run_time = end - start
+        run_times.append(run_time)
+        if i == 0:
+            print(f"Warmup Run (Run 1): {run_time:.2f}s")
+        else:
+            print(f"Run {i+1}: {run_time:.2f}s")
+
+    avg_time = sum(run_times[1:]) / (num_runs - 1) if num_runs > 1 else run_times[0]
+
+    print(f"Average (excluding warmup) over {num_runs - 1} runs: {avg_time:.2f}s\n")
+    return run_times
+
+
+def main():
+    # Handles command line arguments
+    if len(sys.argv) < 2:
+        print(f"Usage: python {sys.argv[0]} <input_file>")
+        print("Supported files:\n- 'imdb_top_100.csv'\n- 'companies_test.csv'")
         sys.exit(1)
-print(f"[INFO] Using input file: {TEXT_FILE}")
 
+    input_file = sys.argv[1]
+    try:
+        texts = load_input_file(input_file)
+    except FileNotFoundError as e:
+        print(e)
+        sys.exit(1)
 
-# ================== LOAD DATA ==================
-texts = process_csv(TEXT_FILE)
+    # Load model
+    refined_model = load_model()
 
+    # Run benchmarks
+    print_environment_info()
+    manual_timing(texts=texts, model=refined_model)
+    peak_memory_usage(texts=texts, model=refined_model)
+    cprofile_profiling(texts=texts, model=refined_model)
+    repeat_runs_timing(texts=texts, model=refined_model)
 
-# ================== LOAD MODEL ==================
-refined = Refined.from_pretrained(
-    model_name='wikipedia_model_with_numbers',
-    entity_set="wikipedia"
-)
+    # Special benchmark for repeated runs including warm run
+    run_times = warmup_and_repeat_runs(texts=texts, model=refined_model, num_runs=10)
 
+    #
+    plt.plot(range(1, len(run_times) + 1), run_times, marker='o')
+    plt.xlabel("Run number")
+    plt.ylabel("Runtime (s)")
+    plt.title("ReFinED Warmup + Repeat Runs")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(DEFAULT_DATA_FOLDER + f"/warmup_runs_{input_file}.png")
 
-# ================== HELPER FUNCTION ==================
-def run_refined(texts_subset):
-    """Processes a list of texts through ReFinED."""
-    return [refined.process_text(t) for t in texts_subset]
-
-
-# ================== ENVIRONMENT INFO ==================
-print("\n[Environment Info]")
-print("Python:", sys.version)
-print("PyTorch:", torch.__version__)
-print("NumPy:", np.__version__)
-
-
-# ================== MANUAL TIMING ==================
-print("\n[Manual Timing & Per-Text Timing]")
-
-per_text_times = []
-start_total = time.perf_counter()
-
-for t in texts:
-    start = time.perf_counter()
-    refined.process_text(t)
-    per_text_times.append(time.perf_counter() - start)
-
-end_total = time.perf_counter()
-total_time = end_total - start_total
-
-print(f"Processed {len(texts)} texts in {total_time:.2f}s")
-print(f"Average per-text: {sum(per_text_times)/len(per_text_times):.4f}s")
-print(f"Min: {min(per_text_times):.4f}s, Max: {max(per_text_times):.4f}s")
-
-
-# ================== PEAK MEMORY ==================
-tracemalloc.start()
-run_refined(texts)
-_, peak_memory = tracemalloc.get_traced_memory()
-print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
-tracemalloc.stop()
-
-
-# ================== CPROFILE PROFILING ==================
-print("\n[cProfile Profiling]")
-profiler = cProfile.Profile()
-profiler.enable()
-run_refined(texts)
-profiler.disable()
-
-stats = pstats.Stats(profiler).sort_stats('cumtime')
-stats.print_stats(TOP_STATS)
-
-
-# ================== REPEAT RUNS ==================
-print("\n[Repeat Runs Timing]")
-repeat_times = []
-for i in range(REPEAT_RUNS):
-    start = time.perf_counter()
-    run_refined(texts)
-    end = time.perf_counter()
-    repeat_times.append(end - start)
-    print(f"Run {i+1}: {end - start:.2f}s")
-
-print(f"Average over {REPEAT_RUNS} runs: {sum(repeat_times)/len(repeat_times):.2f}s\n")
-
+if __name__ == "__main__":
+    main()
 
 """
 Benchmark description:
