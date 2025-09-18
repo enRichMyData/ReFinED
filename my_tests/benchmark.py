@@ -2,9 +2,9 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.setup import *
+from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined
 
-import os
+import importlib
 import time
 import cProfile, pstats
 import tracemalloc
@@ -102,30 +102,23 @@ def warmup_and_repeat_runs(texts, model, num_runs=6):
 
 
 def main():
-    # ================== CONFIG ================== #
-    USE_CPU = False
-    REPEAT_RUNS = 3  # Repeat runs to account for cold start
-    TOP_STATS = 20  # Number of cProfile functions to show
-    DEFAULT_DATA_FOLDER = "my_tests/data"
-    # ============================================ #
+    # ================== CONFIG ==================
+    USE_CPU = False         # using cpu or gpu
+    REPEAT_RUNS = 3         # Repeat runs to account for cold start
+    TOP_STATS = 20          # Number of cProfile functions to show
+    DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
-    # Handles command line arguments
-    if len(sys.argv) < 2:
-        print(f"Usage: python {sys.argv[0]} <input_file>")
-        print("Supported files:\n- 'imdb_top_100.csv'\n- 'companies_test.csv'\n- 'movies_test.csv'\n- 'SN_test.csv'")
-        sys.exit(1)
 
-    input_file = sys.argv[1]
-    try:
-        texts = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER)
-    except FileNotFoundError as e:
-        print(e)
-        sys.exit(1)
+    # ======= Command-line parsing =======
+    input_file, verbose = parse_args()
 
-    # Load model
+    # ======= Load CSV and truths =======
+    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER)
+
+    # ======= Load model =======
     refined_model = load_model(USE_CPU=USE_CPU)
 
-    # Run benchmarksR
+    # ======= Run benchmark =======
     print_environment_info()
     manual_timing(texts=texts, model=refined_model)
     peak_memory_usage(texts=texts, model=refined_model)

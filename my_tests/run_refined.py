@@ -1,7 +1,7 @@
+from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined
 
-# testing and entity linking
-from my_tests.process_file import process_csv
-from refined.inference.processor import Refined
+import sys
+import torch
 
 
 #############################################################################################
@@ -34,67 +34,90 @@ def fetch_wikidata_labels(qids):
 # NOTE Bytt ut dette kallet med fungerende LamAPI kall !
 #############################################################################################
 
-# texts = [
-#     "England won the FIFA World Cup in 1966.",
-#     "Barack Obama was the 44th President of the United States.",
-#     "Amazon was founded by Jeff Bezos.",
-#     "Oslo is the capital of Norway, neighbor to Sweden.",
-#     "Joe Biden was the previous president in the United States, followed by Donald Trump",
-#     "Jordan met with Apple in Washington last week."
-# ]
 
-texts = process_csv("my_tests/data/companies_test.csv")
-
-refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
-                                  entity_set="wikipedia")
+def main():
+    # ======== CONFIG === ========
+    USE_CPU = False         # using cpu or gpu
+    NO_LINES = 50            # lines to process, None for no limit
+    DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
-for text in texts[:2]:  # Test first 5 rows
-    print("\n" + "=" * 100)
-    print(f"{text}\n")
+    # ======= Command-line parsing =======
+    input_file, verbose = parse_args()
 
-    spans = refined.process_text(text)
-    for span in spans:
-        pred_ent = span.predicted_entity # <-- main predicted entity
-        pred_qid = getattr(pred_ent, "wikidata_entity_id", None)
-        pred_title = getattr(pred_ent, "wikipedia_entity_title", None)
+    # ======= Load CSV and truths =======
+    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER)
+    except FileNotFoundError as e:
+        print(e)
+        sys.exit(1)
 
-        print(f"  Mention: [{span.text}]", end="")
-        print(f"  →  Predicted entity: [{pred_title} (QID: {pred_qid})]")
-        print(f"    Type: {span.coarse_type}")
+    # ======= Load model =======
+    refined_model = load_model(USE_CPU=USE_CPU)
 
-        # Confidence from candidates
-        if span.candidate_entities:
-            confidence = None
-            for qid, score in span.candidate_entities:
-                if qid == pred_qid:
-                    confidence = score
-                    break
-            if confidence is not None:
-                print(f"    Model confidence: {confidence * 100:.2f}%")
+    # Restricts number of texts to process
+    texts = texts[:NO_LINES]
+
+    # ======= Run inference =======
+    all_spans = run_refined(texts=texts, model=refined_model)
+
+    # Process each input line
+    for raw_line, doc_spans in zip(texts, all_spans):
+        print("\n" + "=" * 100)
+        print(f"{raw_line}\n")
+
+        for span in doc_spans[:1]:
+            pred_ent = span.predicted_entity
+            pred_qid = getattr(pred_ent, "wikidata_entity_id", None)
+            pred_title = getattr(pred_ent, "wikipedia_entity_title", None)
+
+            print(f"  Mention: [{span.text}]")
+            print(f"  → Predicted entity: [{pred_title} (QID: {pred_qid})]")
+            print(f"    Type: {span.coarse_type}")
+
+            # Confidence for predicted entity
+            if span.candidate_entities:
+                confidence = None
+                for qid, score in span.candidate_entities:
+                    if qid == pred_qid:
+                        confidence = score
+                        break
+                if confidence is not None:
+                    print(f"    Model confidence: {confidence * 100:.2f}%")
+                else:
+                    print("    Model confidence: N/A")
             else:
-                print("    Model confidence: N/A")
-        else:
-            print("    No candidate entities (likely numerical).")
+                print("    No candidate entities.")
 
-        # Normalized DATE
-        if span.coarse_type == "DATE":
-            print(f"    Normalized date: {span.date}")
+            # Normalized DATE
+            if span.coarse_type == "DATE":
+                print(f"    Normalized date: {span.date}")
 
-        # Top-k candidates
-        if span.candidate_entities:
-            print("    Top-k candidate entities:")
-            qids = [qid for qid, _ in span.candidate_entities[:5]]
-            labels = fetch_wikidata_labels(qids)
+            # Top-k candidates
+            if span.candidate_entities:
+                print("    Top-k candidate entities:")
+                qids = [qid for qid, _ in span.candidate_entities[:5]]
+                labels = fetch_wikidata_labels(qids)
 
-            for candidate_qid, score in span.candidate_entities[:5]:
-                candidate_name = labels.get(candidate_qid, candidate_qid)
-                print(f"      - {candidate_name} (QID: {candidate_qid}), score: {score * 100:.2f}%")
+                for candidate_qid, score in span.candidate_entities[:5]:
+                    candidate_name = labels.get(candidate_qid, candidate_qid)
+                    print(f"      - {candidate_name} (QID: {candidate_qid}), score: {score * 100:.2f}%")
 
-        print("-" * 60)
+            print("-" * 60)
 
-        # NOTE!
-        # For Top-K candidates: 
-        # - span.predicted_entity is the _final_ entity the model chooses after considering full context. This is the most correct link.
-        # - span.candidate_entities are raw retrieval scores based on lexical or embedding similarity, not the final conidence scores.
-        
+
+    # ============ CPU/GPU INFO ===================== #
+    print("CUDA available?", torch.cuda.is_available())
+    if torch.cuda.is_available() and not USE_CPU:
+        print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
+    else:
+        print("Running on CPU\n")
+    # =============================================== #
+
+    # NOTE!
+    # For Top-K candidates:
+    # - span.predicted_entity is the _final_ entity the model chooses after considering full context. This is the most correct link.
+    # - span.candidate_entities are raw retrieval scores based on lexical or embedding similarity, not the final conidence scores.
+
+
+if __name__ == "__main__":
+    main()
