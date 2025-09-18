@@ -5,29 +5,35 @@ import sys
 import torch
 
 
-def measure_accuracy(all_spans, truths, NO_LINES, verbose=False):
+def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
     """Measure accuracy between predicted entities and actual truth values"""
 
     # contains predicted qids
-    predicted_qids = [getattr(span.predicted_entity, "wikidata_entity_id", None)
-                      if span.predicted_entity else None
-                      for doc_spans in all_spans
-                      for span in [doc_spans[0]]]
+    predicted_qids = [
+        (i, getattr(doc_spans[0].predicted_entity, "wikidata_entity_id", None)
+        if doc_spans and doc_spans[0].predicted_entity else None)
+        for i, doc_spans in enumerate(all_spans[:LINE_LIMIT])
+    ]
 
-    # contains truth qids
-    gt_qids = [truth[1] for truth in truths[:NO_LINES]]
+    # ground truth qids with rowid
+    gt_qids = [(rowid, qid) for (rowid, title, qid) in truths[:LINE_LIMIT]]
 
     total = min(len(predicted_qids), len(gt_qids))
     correct_count = 0
 
-    for predicted_qid, truth_qid in zip(predicted_qids, gt_qids):
+    # compares QIDs
+    for (idp, predicted_qid), (idt, truth_qids) in zip(predicted_qids, gt_qids):
+
+        # check if predicted_qid is in the list of truth qids
+        match = (predicted_qid in truth_qids) and (idp == idt)
+        if match:
+            correct_count += 1
 
         if verbose:
-            print(f"'{predicted_qid}'=='{truth_qid}'")
-            print(f"Match: {predicted_qid == truth_qid}\n")
-
-        if predicted_qid == truth_qid:
-            correct_count += 1
+            print(f"[{idp}/{idt}] "
+                  f"Predicted: {predicted_qid}, "
+                  f"Truth: {truth_qids}, "
+                  f"Match: {bcolors.OKCYAN if match else bcolors.FAIL}{match}{bcolors.ENDC}\n")
 
     # color-coded message
     accuracy = (correct_count / total) * 100 if total > 0 else 0
@@ -39,7 +45,8 @@ def measure_accuracy(all_spans, truths, NO_LINES, verbose=False):
 def main():
     # ======== CONFIG === ========
     USE_CPU = False         # using cpu or gpu
-    NO_LINES = 100         # number of lines to process, None for no limit
+    LINE_LIMIT = None          # number of lines to process, None for no limit
+    FORMAT = "JSON"          # what type of file for GT
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
@@ -47,7 +54,7 @@ def main():
     input_file, verbose = parse_args()
 
     # ======= Load CSV and truths =======
-    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER)
+    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, FORMAT)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
@@ -56,7 +63,8 @@ def main():
     refined_model = load_model(USE_CPU=USE_CPU)
 
     # Retrieve texts from running ReFinED entity3. linker
-    texts = texts[:NO_LINES]
+    texts = texts[:LINE_LIMIT]
+    truths = truths[:LINE_LIMIT]
 
     # ======= Run inference =======
     start_time = time.time()
@@ -65,7 +73,7 @@ def main():
     print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
 
     # ======= Run measurements =======
-    measure_accuracy(all_spans, truths, NO_LINES, verbose=verbose)
+    measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
 
     # ============ CPU SWITCH ======================= #
     print("\nCUDA available?", torch.cuda.is_available())
@@ -74,6 +82,7 @@ def main():
     else:
         print("Running on CPU\n")
     # =============================================== #
+    print(f"Truth-values retrieved using {FORMAT}")
 
 
 if __name__ == "__main__":

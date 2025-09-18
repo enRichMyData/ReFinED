@@ -38,7 +38,8 @@ def fetch_wikidata_labels(qids):
 def main():
     # ======== CONFIG === ========
     USE_CPU = False         # using cpu or gpu
-    NO_LINES = 50            # lines to process, None for no limit
+    LINE_LIMIT = 50            # lines to process, None for no limit
+    FORMAT = "JSON"          # what type of file for GT
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
@@ -46,7 +47,7 @@ def main():
     input_file, verbose = parse_args()
 
     # ======= Load CSV and truths =======
-    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER)
+    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, FORMAT)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
@@ -55,7 +56,7 @@ def main():
     refined_model = load_model(USE_CPU=USE_CPU)
 
     # Restricts number of texts to process
-    texts = texts[:NO_LINES]
+    texts = texts[:LINE_LIMIT]
 
     # ======= Run inference =======
     all_spans = run_refined(texts=texts, model=refined_model)

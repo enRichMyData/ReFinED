@@ -104,6 +104,7 @@ def warmup_and_repeat_runs(texts, model, num_runs=6):
 def main():
     # ================== CONFIG ==================
     USE_CPU = False         # using cpu or gpu
+    FORMAT = "JSON"          # what type of file for GT
     REPEAT_RUNS = 3         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
@@ -113,7 +114,7 @@ def main():
     input_file, verbose = parse_args()
 
     # ======= Load CSV and truths =======
-    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER)
+    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=FORMAT)
 
     # ======= Load model =======
     refined_model = load_model(USE_CPU=USE_CPU)
