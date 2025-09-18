@@ -2,45 +2,16 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.process_file import process_csv
-from refined.inference.processor import Refined
-import os
+from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined
+
+import importlib
 import time
 import cProfile, pstats
 import tracemalloc
 import sys
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 
-
-
-# ================== CONFIG ==================
-REPEAT_RUNS = 3           # Repeat runs to account for cold start
-TOP_STATS = 20            # Number of cProfile functions to show
-DEFAULT_DATA_FOLDER = "my_tests/data"
-
-# ================== UTILITY FUNCTIONS ==================
-def load_input_file(filename: str):
-    """Loads CSV file from command line or default data folder."""
-    if not os.path.exists(filename):
-        filename = os.path.join(DEFAULT_DATA_FOLDER, filename)
-        if not os.path.exists(filename):
-            raise FileNotFoundError(f"File not found: {filename}")
-    print(f"[INFO] Using input file: {filename}")
-    return process_csv(filename)
-
-def load_model():
-    """Loads ReFinED pre-trained model."""
-    print("[INFO] Loading ReFinED model...")
-    return Refined.from_pretrained(
-        model_name='wikipedia_model_with_numbers',
-        entity_set="wikipedia"
-    )
-
-def run_refined(texts, model):
-    """Process a list of texts through ReFinED."""
-    return [model.process_text(t) for t in texts]
 
 
 # ================== TEST FUNCTIONS ==================
@@ -78,7 +49,7 @@ def peak_memory_usage(texts, model):
 
     print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
 
-def cprofile_profiling(texts, model, top_stats=TOP_STATS):
+def cprofile_profiling(texts, model, top_stats):
     """Profile the processing using cProfile."""
     print("\n[cProfile Profiling]")
     profiler = cProfile.Profile()
@@ -89,7 +60,7 @@ def cprofile_profiling(texts, model, top_stats=TOP_STATS):
     stats = pstats.Stats(profiler).sort_stats('cumtime')
     stats.print_stats(top_stats)
 
-def repeat_runs_timing(texts, model, repeat_runs=REPEAT_RUNS):
+def repeat_runs_timing(texts, model, repeat_runs):
     """Run multiple times to account for warmup effects."""
     print("\n[Repeat Runs Timing]")
     repeat_times = []
@@ -131,40 +102,43 @@ def warmup_and_repeat_runs(texts, model, num_runs=6):
 
 
 def main():
-    # Handles command line arguments
-    if len(sys.argv) < 2:
-        print(f"Usage: python {sys.argv[0]} <input_file>")
-        print("Supported files:\n- 'imdb_top_100.csv'\n- 'companies_test.csv'")
-        sys.exit(1)
+    # ================== CONFIG ==================
+    USE_CPU = False         # using cpu or gpu
+    FORMAT = "JSON"          # what type of file for GT
+    REPEAT_RUNS = 3         # Repeat runs to account for cold start
+    TOP_STATS = 20          # Number of cProfile functions to show
+    DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
-    input_file = sys.argv[1]
-    try:
-        texts = load_input_file(input_file)
-    except FileNotFoundError as e:
-        print(e)
-        sys.exit(1)
 
-    # Load model
-    refined_model = load_model()
+    # ======= Command-line parsing =======
+    input_file, verbose = parse_args()
 
-    # Run benchmarks
+    # ======= Load CSV and truths =======
+    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=FORMAT)
+
+    # ======= Load model =======
+    refined_model = load_model(USE_CPU=USE_CPU)
+
+    # ======= Run benchmark =======
     print_environment_info()
     manual_timing(texts=texts, model=refined_model)
     peak_memory_usage(texts=texts, model=refined_model)
-    cprofile_profiling(texts=texts, model=refined_model)
-    repeat_runs_timing(texts=texts, model=refined_model)
+    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS)
+    repeat_runs_timing(texts=texts, model=refined_model, repeat_runs=REPEAT_RUNS)
 
     # Special benchmark for repeated runs including warm run
     run_times = warmup_and_repeat_runs(texts=texts, model=refined_model, num_runs=10)
 
-    #
-    plt.plot(range(1, len(run_times) + 1), run_times, marker='o')
-    plt.xlabel("Run number")
-    plt.ylabel("Runtime (s)")
-    plt.title("ReFinED Warmup + Repeat Runs")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(DEFAULT_DATA_FOLDER + f"/warmup_runs_{input_file}.png")
+    # plotting for image
+    if importlib.util.find_spec("matplotlib") is not None:
+        import matplotlib.pyplot as plt
+        plt.plot(range(1, len(run_times) + 1), run_times, marker='o')
+        plt.xlabel("Run number")
+        plt.ylabel("Runtime (s)")
+        plt.title("ReFinED Warmup + Repeat Runs")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(DEFAULT_DATA_FOLDER + f"/warmup_runs_{input_file}.png")
 
 if __name__ == "__main__":
     main()
