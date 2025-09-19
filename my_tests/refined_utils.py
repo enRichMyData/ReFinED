@@ -59,7 +59,11 @@ def get_truth_path(folder: str, default_data: str, filename: str):
 
 def extract_truths_csv(folder: str, default_data: str):
     """Load corresponding ground truth using [CSV]"""
-    path = get_truth_path(folder, default_data, f"el_{folder}_gt_wikidata.csv")
+    if folder.upper() == "SN":
+        filename = f"{folder}_gt.csv"
+    else:
+        filename = f"el_{folder}_gt_wikidata.csv"
+    path = get_truth_path(folder, default_data, filename)
     if not path:
         return None
     df = pd.read_csv(path)

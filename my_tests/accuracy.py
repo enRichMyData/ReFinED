@@ -33,20 +33,20 @@ def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
             print(f"[{idp}/{idt}] "
                   f"Predicted: {predicted_qid}, "
                   f"Truth: {truth_qids}, "
-                  f"Match: {bcolors.OKCYAN if match else bcolors.FAIL}{match}{bcolors.ENDC}\n")
+                  f"Match: {bcolors.OKCYAN if match else bcolors.FAIL}{match}{bcolors.ENDC}")
 
     # color-coded message
     accuracy = (correct_count / total) * 100 if total > 0 else 0
     if accuracy >= 50.00: color = bcolors.OKGREEN
     else: color = bcolors.FAIL
-    print(color + bcolors.BOLD + f"Accuracy: {accuracy:.2f}% ({correct_count}/{total} correct)"+bcolors.ENDC)
+    print(color + bcolors.BOLD + f"\nAccuracy: {accuracy:.2f}% ({correct_count}/{total} correct)"+bcolors.ENDC)
 
 
 def main():
     # ======== CONFIG === ========
     USE_CPU = False         # using cpu or gpu
     LINE_LIMIT = None          # number of lines to process, None for no limit
-    FORMAT = "JSON"          # what type of file for GT
+    FORMAT = "CSV"          # what type of file for GT
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
