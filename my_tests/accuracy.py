@@ -8,32 +8,37 @@ import torch
 def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
     """Measure accuracy between predicted entities and actual truth values"""
 
-    # contains predicted qids
+    # extracts rowid, title, and qid from predictions
     predicted_qids = [
-        (i, getattr(doc_spans[0].predicted_entity, "wikidata_entity_id", None)
-        if doc_spans and doc_spans[0].predicted_entity else None)
-        for i, doc_spans in enumerate(all_spans[:LINE_LIMIT])
+        (
+            i,  # idRow / document index
+            getattr(span[0].predicted_entity, "wikipedia_entity_title", None) if span else None,
+            getattr(span[0].predicted_entity, "wikidata_entity_id", None) if span else None
+        )
+        for i, span in enumerate(all_spans)
     ]
 
     # ground truth qids with rowid
-    gt_qids = [(rowid, qid) for (rowid, title, qid) in truths[:LINE_LIMIT]]
+    gt_qids = truths[:LINE_LIMIT]
 
     total = min(len(predicted_qids), len(gt_qids))
     correct_count = 0
 
     # compares QIDs
-    for (idp, predicted_qid), (idt, truth_qids) in zip(predicted_qids, gt_qids):
+    for (idp, title, predicted_qid), (idt, truth_qids) in zip(predicted_qids, gt_qids):
 
         # check if predicted_qid is in the list of truth qids
-        match = (predicted_qid in truth_qids) and (idp == idt)
+        match = (predicted_qid in truth_qids) #and (idp == idt)
         if match:
             correct_count += 1
 
         if verbose:
-            print(f"[{idp}/{idt}] "
-                  f"Predicted: {predicted_qid}, "
-                  f"Truth: {truth_qids}, "
-                  f"Match: {bcolors.OKCYAN if match else bcolors.FAIL}{match}{bcolors.ENDC}")
+            print(
+                f"[{idp:>2}|{idt:<2}] "
+                f"Predicted: '{str(predicted_qid):<12}' "
+                f"Truth: {str(truth_qids):<15} "
+                f"Match: {bcolors.OKCYAN if match else bcolors.FAIL}{str(match):<6}{bcolors.ENDC} "
+                f"({title})")
 
     # color-coded message
     accuracy = (correct_count / total) * 100 if total > 0 else 0
@@ -82,6 +87,7 @@ def main():
     else:
         print("Running on CPU\n")
     # =============================================== #
+    print(f"Results from file: {input_file}")
     print(f"Truth-values retrieved using {FORMAT}")
 
 

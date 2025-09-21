@@ -1,9 +1,14 @@
 import pandas as pd
 
+class bcolors:
+    OKGREEN = '\033[92m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+
 def process_csv(file_path):
     df = pd.read_csv(file_path)
 
-    print(f'Loaded {len(df)} rows with columns: {list(df.columns)}')
+    print(bcolors.OKGREEN + bcolors.BOLD + f'[INFO] Loaded {len(df)} rows with columns: {list(df.columns)}' + bcolors.ENDC)
 
     # Use for IMDb
     # if "Series_Title" in df.columns:
