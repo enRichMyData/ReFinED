@@ -17,6 +17,9 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def info_wrap(text: str):
+    """Wraps text in a green bold info style."""
+    return bcolors.OKGREEN + bcolors.BOLD + text + bcolors.ENDC
 
 # ---------------- Command-line & file loader ----------------
 def parse_args(supported_files=None):
@@ -50,21 +53,29 @@ def get_truth_path(folder: str, default_data: str, filename: str):
     """Return path to truth file if it exists, else None (with logging)."""
     path = os.path.join(default_data, folder, filename)
     if not os.path.exists(path):
-        print(bcolors.FAIL + f"Ground truth file not found: '{path}'" + bcolors.ENDC)
+        print(info_wrap(f"Ground truth file not found: '{path}'"))
         return None
     else:
-        print(bcolors.OKGREEN + bcolors.BOLD + f"[INFO] Using truth-file: '{filename}'" + bcolors.ENDC)
+        print(info_wrap(f"[INFO] Using truth-file: '{filename}'"))
         return path
 
 
 def extract_truths_csv(folder: str, default_data: str):
     """Load corresponding ground truth using [CSV]"""
-    path = get_truth_path(folder, default_data, f"el_{folder}_gt_wikidata.csv")
+    if folder.upper() == "SN":
+        filename = f"{folder}_gt.csv"
+    else:
+        filename = f"el_{folder}_gt_wikidata.csv"
+    path = get_truth_path(folder, default_data, filename)
     if not path:
         return None
     df = pd.read_csv(path)
     df = df[df["tableName"] == f"{folder}_test"]
-    return [(row.idRow, None, [row.entity.split("/")[-1]]) for _, row in df.iterrows()]  # (id, None, [qid])
+
+    truths = [(row.idRow, [row.entity.split("/")[-1]]) for _, row in df.iterrows()]  # (id, None, [qid])
+    print(info_wrap(f"[INFO] Loaded {len(truths)} entries from {path}"))
+
+    return truths
 
 
 def extract_truths_json(folder: str, default_data: str):
@@ -77,9 +88,10 @@ def extract_truths_json(folder: str, default_data: str):
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # Build a list of (id, title, first_qid) for each mention
-    return  [(i, title, qids if qids else None) for i, (title, qids) in enumerate(data.items())]
-    # (id, title, [qid1, qid2, ...])
+    print(info_wrap(f"[INFO] Loaded {len(data)} entries from {path}"))
+
+    # Build a list of (id, first_qid) for each qid in json
+    return [(i, qids if qids else None) for i, (title, qids) in enumerate(data.items())] # (rowid, [qid1, qid2, ...])
 
 
 def resolve_input_path(filename: str, default_data: str):
@@ -90,7 +102,7 @@ def resolve_input_path(filename: str, default_data: str):
         path = os.path.join(default_data, folder, filename)
         if not os.path.exists(path):
             raise FileNotFoundError(bcolors.FAIL + f"File not found: '{path}'" + bcolors.ENDC)
-    print(bcolors.OKGREEN + bcolors.BOLD + f"[INFO] Using input file: '{path}'" + bcolors.ENDC)
+    print(info_wrap(f"[INFO] Using input file: '{path}'"))
     return folder, path
 
 
@@ -115,7 +127,8 @@ def load_model(USE_CPU=False):
     Loads ReFinED pre-trained model.
     Now includes use of CPU / GPU
     """
-    print(bcolors.OKGREEN + bcolors.BOLD + "[INFO] Loading ReFinED model..." + bcolors.ENDC)
+
+    print(info_wrap("[INFO] Loading ReFinED model..."))
 
     device = "cpu" if USE_CPU else "cuda" if torch.cuda.is_available() else "cpu"
 
