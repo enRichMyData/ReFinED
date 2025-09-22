@@ -291,6 +291,7 @@ class Refined(object):
         if self.n_gpu == 1 or True:
             batch = batch.to(self.device)
         self.model.eval()
+
         # with autocast():                          # OLD
         with amp.autocast(self.device):             # NEW
             if hasattr(torch, "inference_mode"):

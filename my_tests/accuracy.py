@@ -1,4 +1,10 @@
-from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined, bcolors
+from my_tests.refined_utils import \
+    parse_args, \
+    load_input_file, \
+    load_model, \
+    run_refined_single, \
+    run_refined_batch, \
+    bcolors
 
 import time
 import sys
@@ -50,6 +56,7 @@ def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
 def main():
     # ======== CONFIG === ========
     USE_CPU = False         # using cpu or gpu
+    BATCH = False           # using batched or not
     LINE_LIMIT = None          # number of lines to process, None for no limit
     FORMAT = "CSV"          # what type of file for GT
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
@@ -73,12 +80,14 @@ def main():
 
     # ======= Run inference =======
     start_time = time.time()
-    all_spans = run_refined(texts=texts, model=refined_model)
+    if BATCH: all_spans = run_refined_single(texts=texts, model=refined_model)
+    else: all_spans = run_refined_batch(texts=texts, model=refined_model)
     duration = time.time() - start_time
-    print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
 
     # ======= Run measurements =======
     measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
+
+    print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
 
     # ============ CPU SWITCH ======================= #
     print("\nCUDA available?", torch.cuda.is_available())

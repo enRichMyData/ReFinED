@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from my_tests.process_file import process_csv
 
 from refined.inference.processor import Refined
@@ -86,7 +88,7 @@ def extract_truths_json(folder: str, default_data: str):
 
     import json
     with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data = json.load(f, object_pairs_hook=OrderedDict)
 
     print(info_wrap(f"[INFO] Loaded {len(data)} entries from {path}"))
 
@@ -128,7 +130,13 @@ def load_model(USE_CPU=False):
     Now includes use of CPU / GPU
     """
 
-    print(info_wrap("[INFO] Loading ReFinED model..."))
+    model = "wikipedia_model_with_numbers"
+    entitiy_set = "wikidata"
+
+    print(info_wrap(f"[INFO] Loading ReFinED model: "
+                    +bcolors.OKCYAN+f"'{model}'"+bcolors.ENDC+"'"
+                    +info_wrap(", entity set: ")
+                    +bcolors.OKCYAN+f"'{entitiy_set}'"))
 
     device = "cpu" if USE_CPU else "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -137,11 +145,27 @@ def load_model(USE_CPU=False):
         torch.amp.autocast = lambda *args, **kwargs: original_autocast(device_type="cpu", dtype=torch.float32)
 
     return Refined.from_pretrained(
-        model_name='wikipedia_model_with_numbers',
-        entity_set="wikipedia",
+        model_name=model,
+        entity_set=entitiy_set,
+        download_files=True, # optional, downloads from S3 to local
         device=device  #    <--------- Decides to use 'cpu'  or 'gpu'
     )
 
-def run_refined(texts, model):
+def run_refined_single(texts, model):
     """Process a list of texts through ReFinED."""
     return [model.process_text(t) for t in texts]
+
+def run_refined_batch(texts, model, max_batch_size: int = 16):
+    """
+    Process a list of texts through ReFinED using batch processing.
+    """
+    docs = model.process_text_batch(
+        texts,
+        max_batch_size=max_batch_size,
+        prune_ner_types=True,
+        return_special_spans=True
+    )
+
+    # list of all spans from batched processing
+    all_spans = [doc.spans for doc in docs]
+    return all_spans
