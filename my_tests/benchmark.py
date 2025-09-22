@@ -2,7 +2,7 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined
+from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined_single, run_refined_batch
 
 import importlib
 import time
@@ -15,68 +15,82 @@ import numpy as np
 
 
 # ================== TEST FUNCTIONS ==================
-def print_environment_info():
+def print_environment_info(cpu, batch):
     print("\n[Environment Info]")
     print("Python:", sys.version)
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
+    if torch.cuda.is_available() and not cpu:
+        print("Running on GPU:", torch.cuda.get_device_name(0))
+    else:
+        print("Running on CPU")
+    if batch: print("Using Batched mode")
+    print("\n")
 
-def manual_timing(texts, model):
-    """Measure per-text and total runtime."""
+def manual_timing(texts, model, run_fn):
+    """Measure runtime, works for both single and batch."""
     print("\n[Manual Timing & Per-Text Timing]")
-    per_text_times = []
+
     start_total = time.perf_counter()
-
-    for t in texts:
-        start = time.perf_counter()
-        model.process_text(t)
-        per_text_times.append(time.perf_counter() - start)
-
+    outputs = run_fn(texts, model)  # either single or batch
     total_time = time.perf_counter() - start_total
 
-    print(f"Processed {len(texts)} texts in {total_time:.2f}s")
-    print(f"Average per-text: {sum(per_text_times)/len(per_text_times):.4f}s")
-    print(f"Min: {min(per_text_times):.4f}s, Max: {max(per_text_times):.4f}s")
+    # Per-text timings only make sense in single mode
+    if run_fn == run_refined_single:
+        per_text_times = []
+        for t in texts:
+            start = time.perf_counter()
+            model.process_text(t)
+            per_text_times.append(time.perf_counter() - start)
 
-def peak_memory_usage(texts, model):
+        print(f"Processed {len(texts)} texts in {total_time:.2f}s")
+        print(f"Average per-text: {sum(per_text_times)/len(per_text_times):.4f}s")
+        print(f"Min: {min(per_text_times):.4f}s, Max: {max(per_text_times):.4f}s")
+
+    else:
+        print(f"Processed {len(texts)} texts in {total_time:.2f}s (batch mode)")
+        print("Per-text timing skipped (batch processes them together)")
+
+
+def peak_memory_usage(texts, model, run_fn):
     """Measure peak memory usage of Python allocations."""
     print("\n[Peak Memory Usage]")
 
     tracemalloc.start()
-    run_refined(texts, model)
+    run_fn(texts, model)
     _, peak_memory = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
     print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
 
-def cprofile_profiling(texts, model, top_stats):
+def cprofile_profiling(texts, model, top_stats, run_fn):
     """Profile the processing using cProfile."""
     print("\n[cProfile Profiling]")
     profiler = cProfile.Profile()
     profiler.enable()
-    run_refined(texts, model)
+    run_fn(texts, model)
     profiler.disable()
 
     stats = pstats.Stats(profiler).sort_stats('cumtime')
     stats.print_stats(top_stats)
 
-def repeat_runs_timing(texts, model, repeat_runs):
+def repeat_runs_timing(texts, model, repeat_runs, run_fn):
     """Run multiple times to account for warmup effects."""
     print("\n[Repeat Runs Timing]")
     repeat_times = []
 
     for i in range(repeat_runs):
         start = time.perf_counter()
-        run_refined(texts, model)
+        run_fn(texts, model)
         end = time.perf_counter()
         repeat_times.append(end - start)
         print(f"Run {i+1}: {end - start:.2f}s")
 
     avg_time = sum(repeat_times) / repeat_runs
-
     print(f"Average over {repeat_runs} runs: {avg_time:.2f}s\n")
 
-def warmup_and_repeat_runs(texts, model, num_runs=6):
+
+def warmup_and_repeat_runs(texts, model, num_runs, run_fn):
     """
     Measures sequential runs including the first warmup run.
     The first run typically takes longer, whereas the rest benefit from caching and preloaded model.
@@ -86,7 +100,7 @@ def warmup_and_repeat_runs(texts, model, num_runs=6):
 
     for i in range(num_runs):
         start = time.perf_counter()
-        run_refined(texts, model)
+        run_fn(texts, model)
         end = time.perf_counter()
         run_time = end - start
         run_times.append(run_time)
@@ -104,6 +118,7 @@ def warmup_and_repeat_runs(texts, model, num_runs=6):
 def main():
     # ================== CONFIG ==================
     USE_CPU = False         # using cpu or gpu
+    BATCH = True           # using batched or not
     FORMAT = "JSON"          # what type of file for GT
     REPEAT_RUNS = 3         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
@@ -119,15 +134,18 @@ def main():
     # ======= Load model =======
     refined_model = load_model(USE_CPU=USE_CPU)
 
+    # ======= Select run function based on BATCH flag =======
+    run_fn = run_refined_batch if BATCH else run_refined_single
+
     # ======= Run benchmark =======
-    print_environment_info()
-    manual_timing(texts=texts, model=refined_model)
-    peak_memory_usage(texts=texts, model=refined_model)
-    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS)
-    repeat_runs_timing(texts=texts, model=refined_model, repeat_runs=REPEAT_RUNS)
+    print_environment_info(cpu=USE_CPU, batch=BATCH)
+    manual_timing(texts=texts, model=refined_model, run_fn=run_fn)
+    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn)
+    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn)
+    repeat_runs_timing(texts=texts, model=refined_model, repeat_runs=REPEAT_RUNS, run_fn=run_fn)
 
     # Special benchmark for repeated runs including warm run
-    run_times = warmup_and_repeat_runs(texts=texts, model=refined_model, num_runs=10)
+    run_times = warmup_and_repeat_runs(texts=texts, model=refined_model, num_runs=10, run_fn=run_fn)
 
     # plotting for image
     if importlib.util.find_spec("matplotlib") is not None:
