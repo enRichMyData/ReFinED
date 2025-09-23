@@ -2,7 +2,16 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined_single, run_refined_batch
+from my_tests.refined_utils import \
+    parse_args, \
+    load_input_file, \
+    load_model, \
+    run_refined_single, \
+    run_refined_batch, \
+    bolden, \
+    blue_info_wrap
+
+from my_tests.accuracy import measure_accuracy
 
 import importlib
 import time
@@ -16,23 +25,23 @@ import numpy as np
 
 # ================== TEST FUNCTIONS ==================
 def print_environment_info(cpu, batch):
-    print("\n[Environment Info]")
+    print(bolden("\n[Environment Info]"))
     print("Python:", sys.version)
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
     if torch.cuda.is_available() and not cpu:
-        print("Running on GPU:", torch.cuda.get_device_name(0))
+        print(blue_info_wrap("Running on GPU: "+torch.cuda.get_device_name(0)))
     else:
-        print("Running on CPU")
-    if batch: print("Using Batched mode")
+        print(blue_info_wrap("Running on CPU"))
+    if batch: print(blue_info_wrap("Using Batched mode"))
     print("\n")
 
 def manual_timing(texts, model, run_fn):
     """Measure runtime, works for both single and batch."""
-    print("\n[Manual Timing & Per-Text Timing]")
+    print(bolden("\n[Manual Timing & Per-Text Timing]"))
 
     start_total = time.perf_counter()
-    outputs = run_fn(texts, model)  # either single or batch
+    run_fn(texts, model)  # either single or batch
     total_time = time.perf_counter() - start_total
 
     # Per-text timings only make sense in single mode
@@ -54,7 +63,7 @@ def manual_timing(texts, model, run_fn):
 
 def peak_memory_usage(texts, model, run_fn):
     """Measure peak memory usage of Python allocations."""
-    print("\n[Peak Memory Usage]")
+    print(bolden("\n[Peak Memory Usage]"))
 
     tracemalloc.start()
     run_fn(texts, model)
@@ -65,7 +74,7 @@ def peak_memory_usage(texts, model, run_fn):
 
 def cprofile_profiling(texts, model, top_stats, run_fn):
     """Profile the processing using cProfile."""
-    print("\n[cProfile Profiling]")
+    print(bolden("\n[cProfile Profiling]"))
     profiler = cProfile.Profile()
     profiler.enable()
     run_fn(texts, model)
@@ -74,45 +83,35 @@ def cprofile_profiling(texts, model, top_stats, run_fn):
     stats = pstats.Stats(profiler).sort_stats('cumtime')
     stats.print_stats(top_stats)
 
-def repeat_runs_timing(texts, model, repeat_runs, run_fn):
-    """Run multiple times to account for warmup effects."""
-    print("\n[Repeat Runs Timing]")
-    repeat_times = []
 
-    for i in range(repeat_runs):
+def timed_runs(texts, model, num_runs, run_fn, include_warmup=True):
+    """Run model multiple times, measuring execution time."""
+    times, results = [], None
+    print(bolden("\n[Repeated Runs Timing]"))
+
+    # Optional warmup run
+    if include_warmup:
         start = time.perf_counter()
-        run_fn(texts, model)
-        end = time.perf_counter()
-        repeat_times.append(end - start)
-        print(f"Run {i+1}: {end - start:.2f}s")
+        _ = run_fn(texts, model)
+        t = time.perf_counter() - start
+        print(f"Warmup Run: {t:.2f}s")
 
-    avg_time = sum(repeat_times) / repeat_runs
-    print(f"Average over {repeat_runs} runs: {avg_time:.2f}s\n")
-
-
-def warmup_and_repeat_runs(texts, model, num_runs, run_fn):
-    """
-    Measures sequential runs including the first warmup run.
-    The first run typically takes longer, whereas the rest benefit from caching and preloaded model.
-    """
-    print(f"\n[Warmup + Repeat Runs Timing] ({num_runs} runs)")
-    run_times = []
-
+    # Actual measured runs
     for i in range(num_runs):
         start = time.perf_counter()
-        run_fn(texts, model)
-        end = time.perf_counter()
-        run_time = end - start
-        run_times.append(run_time)
-        if i == 0:
-            print(f"Warmup Run (Run 1): {run_time:.2f}s")
-        else:
-            print(f"Run {i+1}: {run_time:.2f}s")
+        out = run_fn(texts, model)
+        if results is None:
+            results = out  # save predictions once
+        t = time.perf_counter() - start
+        times.append(t)
+        print(f"Run {i+1}: {t:.2f}s")
 
-    avg_time = sum(run_times[1:]) / (num_runs - 1) if num_runs > 1 else run_times[0]
+    avg = sum(times) / len(times) if times else 0.0
+    print(f"Average over {num_runs} runs: {avg:.2f}s\n")
 
-    print(f"Average (excluding warmup) over {num_runs - 1} runs: {avg_time:.2f}s\n")
-    return run_times
+    return times, results
+
+
 
 
 def main():
@@ -120,7 +119,7 @@ def main():
     USE_CPU = False         # using cpu or gpu
     BATCH = True           # using batched or not
     FORMAT = "JSON"          # what type of file for GT
-    REPEAT_RUNS = 3         # Repeat runs to account for cold start
+    REPEAT_RUNS = 8         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
@@ -138,14 +137,19 @@ def main():
     run_fn = run_refined_batch if BATCH else run_refined_single
 
     # ======= Run benchmark =======
+    print("\n\n======= START BENCHMARK  =======\n")
+
     print_environment_info(cpu=USE_CPU, batch=BATCH)
     manual_timing(texts=texts, model=refined_model, run_fn=run_fn)
     peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn)
     cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn)
-    repeat_runs_timing(texts=texts, model=refined_model, repeat_runs=REPEAT_RUNS, run_fn=run_fn)
+    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn)
 
-    # Special benchmark for repeated runs including warm run
-    run_times = warmup_and_repeat_runs(texts=texts, model=refined_model, num_runs=10, run_fn=run_fn)
+    # ======= Accuracy  =======
+    print(bolden("\n[Accuracy]"))
+    measure_accuracy(spans, truths, LINE_LIMIT=None, verbose=verbose)
+    
+    print("\n\n======= END BENCHMARK  =======\n")
 
     # plotting for image
     if importlib.util.find_spec("matplotlib") is not None:
