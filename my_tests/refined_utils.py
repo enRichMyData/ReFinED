@@ -23,13 +23,13 @@ def bolden(text: str):
     """Wraps text in bold style."""
     return bcolors.BOLD + text + bcolors.ENDC
 
-def blue_wrap(text: str):
-    """Wraps text in a blue style."""
-    return bcolors.OKBLUE + text + bcolors.ENDC
-
-def info_wrap(text: str):
+def green_info_wrap(text: str):
     """Wraps text in a green bold info style."""
     return bcolors.OKGREEN + bcolors.BOLD + text + bcolors.ENDC
+
+def blue_info_wrap(text: str):
+    """Wraps text in a blue bold info style."""
+    return bcolors.OKBLUE + bcolors.BOLD + text + bcolors.ENDC
 
 # ---------------- Command-line & file loader ----------------
 def parse_args(supported_files=None):
@@ -63,10 +63,10 @@ def get_truth_path(folder: str, default_data: str, filename: str):
     """Return path to truth file if it exists, else None (with logging)."""
     path = os.path.join(default_data, folder, filename)
     if not os.path.exists(path):
-        print(info_wrap(f"Ground truth file not found: '{path}'"))
+        print(green_info_wrap(f"Ground truth file not found: '{path}'"))
         return None
     else:
-        print(info_wrap(f"[INFO] Using truth-file: '{filename}'"))
+        print(green_info_wrap(f"[INFO] Using truth-file: '{filename}'"))
         return path
 
 
@@ -83,7 +83,7 @@ def extract_truths_csv(folder: str, default_data: str):
     df = df[df["tableName"] == f"{folder}_test"]
 
     truths = [(row.idRow, [row.entity.split("/")[-1]]) for _, row in df.iterrows()]  # (id, None, [qid])
-    print(info_wrap(f"[INFO] Loaded {len(truths)} entries from {path}"))
+    print(green_info_wrap(f"[INFO] Loaded {len(truths)} entries from {path}"))
 
     return truths
 
@@ -98,7 +98,7 @@ def extract_truths_json(folder: str, default_data: str):
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f, object_pairs_hook=OrderedDict)
 
-    print(info_wrap(f"[INFO] Loaded {len(data)} entries from {path}"))
+    print(green_info_wrap(f"[INFO] Loaded {len(data)} entries from {path}"))
 
     # Build a list of (id, first_qid) for each qid in json
     return [(i, qids if qids else None) for i, (title, qids) in enumerate(data.items())] # (rowid, [qid1, qid2, ...])
@@ -112,7 +112,7 @@ def resolve_input_path(filename: str, default_data: str):
         path = os.path.join(default_data, folder, filename)
         if not os.path.exists(path):
             raise FileNotFoundError(bcolors.FAIL + f"File not found: '{path}'" + bcolors.ENDC)
-    print(info_wrap(f"[INFO] Using input file: '{path}'"))
+    print(green_info_wrap(f"[INFO] Using input file: '{path}'"))
     return folder, path
 
 
@@ -141,14 +141,16 @@ def load_model(USE_CPU=False):
     model = "wikipedia_model_with_numbers"
     entitiy_set = "wikidata"
 
-    print(info_wrap(f"[INFO] Loading ReFinED model: "
-                    +bcolors.OKCYAN+f"'{model}'"+bcolors.ENDC+"'"
-                    +info_wrap(", entity set: ")
-                    +bcolors.OKCYAN+f"'{entitiy_set}'"))
+    print(green_info_wrap(f"[INFO] Loading ReFinED model: "
+                          + bcolors.OKCYAN +f"'{model}'" + bcolors.ENDC +"'"
+                          + green_info_wrap(", entity set: ")
+                          + bcolors.OKCYAN +f"'{entitiy_set}'"))
 
     device = "cpu" if USE_CPU else "cuda" if torch.cuda.is_available() else "cpu"
 
     if device == "cpu":
+        import warnings
+        warnings.filterwarnings("ignore", message="In CPU autocast, but the target dtype is not supported.*")
         original_autocast = torch.amp.autocast
         torch.amp.autocast = lambda *args, **kwargs: original_autocast(device_type="cpu", dtype=torch.float32)
 
