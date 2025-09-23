@@ -19,6 +19,14 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def bolden(text: str):
+    """Wraps text in bold style."""
+    return bcolors.BOLD + text + bcolors.ENDC
+
+def blue_wrap(text: str):
+    """Wraps text in a blue style."""
+    return bcolors.OKBLUE + text + bcolors.ENDC
+
 def info_wrap(text: str):
     """Wraps text in a green bold info style."""
     return bcolors.OKGREEN + bcolors.BOLD + text + bcolors.ENDC

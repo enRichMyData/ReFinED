@@ -2,7 +2,14 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined_single, run_refined_batch
+from my_tests.refined_utils import \
+    parse_args, \
+    load_input_file, \
+    load_model, \
+    run_refined_single, \
+    run_refined_batch, \
+    bolden, \
+    blue_wrap
 
 import importlib
 import time
@@ -16,23 +23,23 @@ import numpy as np
 
 # ================== TEST FUNCTIONS ==================
 def print_environment_info(cpu, batch):
-    print("\n[Environment Info]")
+    print(bolden("\n[Environment Info]"))
     print("Python:", sys.version)
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
     if torch.cuda.is_available() and not cpu:
-        print("Running on GPU:", torch.cuda.get_device_name(0))
+        print(blue_wrap("Running on GPU:", torch.cuda.get_device_name(0)))
     else:
-        print("Running on CPU")
-    if batch: print("Using Batched mode")
+        print(blue_wrap("Running on CPU"))
+    if batch: print(bolden("Using Batched mode"))
     print("\n")
 
 def manual_timing(texts, model, run_fn):
     """Measure runtime, works for both single and batch."""
-    print("\n[Manual Timing & Per-Text Timing]")
+    print(bolden("\n[Manual Timing & Per-Text Timing]"))
 
     start_total = time.perf_counter()
-    outputs = run_fn(texts, model)  # either single or batch
+    run_fn(texts, model)  # either single or batch
     total_time = time.perf_counter() - start_total
 
     # Per-text timings only make sense in single mode
@@ -54,7 +61,7 @@ def manual_timing(texts, model, run_fn):
 
 def peak_memory_usage(texts, model, run_fn):
     """Measure peak memory usage of Python allocations."""
-    print("\n[Peak Memory Usage]")
+    print(bolden("\n[Peak Memory Usage]"))
 
     tracemalloc.start()
     run_fn(texts, model)
@@ -65,7 +72,7 @@ def peak_memory_usage(texts, model, run_fn):
 
 def cprofile_profiling(texts, model, top_stats, run_fn):
     """Profile the processing using cProfile."""
-    print("\n[cProfile Profiling]")
+    print(bolden("\n[cProfile Profiling]"))
     profiler = cProfile.Profile()
     profiler.enable()
     run_fn(texts, model)
@@ -76,7 +83,7 @@ def cprofile_profiling(texts, model, top_stats, run_fn):
 
 def repeat_runs_timing(texts, model, repeat_runs, run_fn):
     """Run multiple times to account for warmup effects."""
-    print("\n[Repeat Runs Timing]")
+    print(bolden("\n[Repeat Runs Timing]"))
     repeat_times = []
 
     for i in range(repeat_runs):
@@ -95,7 +102,7 @@ def warmup_and_repeat_runs(texts, model, num_runs, run_fn):
     Measures sequential runs including the first warmup run.
     The first run typically takes longer, whereas the rest benefit from caching and preloaded model.
     """
-    print(f"\n[Warmup + Repeat Runs Timing] ({num_runs} runs)")
+    print(bolden(f"\n[Warmup + Repeat Runs Timing] ({num_runs} runs)"))
     run_times = []
 
     for i in range(num_runs):
