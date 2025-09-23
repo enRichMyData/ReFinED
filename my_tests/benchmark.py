@@ -87,7 +87,7 @@ def cprofile_profiling(texts, model, top_stats, run_fn):
 def timed_runs(texts, model, num_runs, run_fn, include_warmup=True):
     """Run model multiple times, measuring execution time."""
     times, results = [], None
-    print("\n[Repeated Runs Timing]")
+    print(bolden("\n[Repeated Runs Timing]"))
 
     # Optional warmup run
     if include_warmup:
@@ -146,7 +146,7 @@ def main():
     run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn)
 
     # ======= Accuracy  =======
-    print("\n[Accuracy]")
+    print(bolden("\n[Accuracy]"))
     measure_accuracy(spans, truths, LINE_LIMIT=None, verbose=verbose)
     
     print("\n\n======= END BENCHMARK  =======\n")
