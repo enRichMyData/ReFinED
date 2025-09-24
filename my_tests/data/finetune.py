@@ -20,15 +20,15 @@ dftruth = dftruth[dftruth["tableName"] == f"{folder}_train"]
 # Merge the two DataFrames on the idRow column
 frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
 
-# Display the merged DataFrame
-print(frame.head())
-
-# Display one full line again
-print(frame.iloc[0])
-
 def get_wikidata_docs(frame) -> Iterable[Doc]:
     docs = []
     for _, row in frame.iterrows():
+        text = f"{row['Title']},{row['Release_Date']},{row['Duration']},{row['Genre']},{row['Country']},{row['Language']},{row['Director']}"
+
+        gold_entity = row['entity']
+
+        print(f"{'Text:':<15}{text}")
+        print(f"{'Gold Entity:':<15}{gold_entity}")
         break
 
 get_wikidata_docs(frame)
