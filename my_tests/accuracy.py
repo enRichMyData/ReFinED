@@ -59,6 +59,7 @@ def main():
     BATCH = False           # using batched or not
     LINE_LIMIT = None          # number of lines to process, None for no limit
     FORMAT = "CSV"          # what type of file for GT
+    BATCH_SIZE = 16        # batch size if using batched
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
@@ -81,7 +82,7 @@ def main():
     # ======= Run inference =======
     start_time = time.time()
     if BATCH: all_spans = run_refined_single(texts=texts, model=refined_model)
-    else: all_spans = run_refined_batch(texts=texts, model=refined_model)
+    else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=BATCH_SIZE)
     duration = time.time() - start_time
 
     # ======= Run measurements =======
