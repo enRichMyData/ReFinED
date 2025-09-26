@@ -36,12 +36,12 @@ def print_environment_info(cpu, batch):
     if batch: print(blue_info_wrap("Using Batched mode"))
     print("\n")
 
-def manual_timing(texts, model, run_fn):
+def manual_timing(texts, model, run_fn, batch_size):
     """Measure runtime, works for both single and batch."""
     print(bolden("\n[Manual Timing & Per-Text Timing]"))
 
     start_total = time.perf_counter()
-    run_fn(texts, model)  # either single or batch
+    run_fn(texts, model, batch_size)  # either single or batch
     total_time = time.perf_counter() - start_total
 
     # Per-text timings only make sense in single mode
@@ -61,30 +61,30 @@ def manual_timing(texts, model, run_fn):
         print("Per-text timing skipped (batch processes them together)")
 
 
-def peak_memory_usage(texts, model, run_fn):
+def peak_memory_usage(texts, model, run_fn, batch_size):
     """Measure peak memory usage of Python allocations."""
     print(bolden("\n[Peak Memory Usage]"))
 
     tracemalloc.start()
-    run_fn(texts, model)
+    run_fn(texts, model, batch_size)
     _, peak_memory = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
     print(f"Peak memory usage: {peak_memory / 1e6:.2f} MB")
 
-def cprofile_profiling(texts, model, top_stats, run_fn):
+def cprofile_profiling(texts, model, top_stats, run_fn, batch_size):
     """Profile the processing using cProfile."""
     print(bolden("\n[cProfile Profiling]"))
     profiler = cProfile.Profile()
     profiler.enable()
-    run_fn(texts, model)
+    run_fn(texts, model, batch_size)
     profiler.disable()
 
     stats = pstats.Stats(profiler).sort_stats('cumtime')
     stats.print_stats(top_stats)
 
 
-def timed_runs(texts, model, num_runs, run_fn, include_warmup=True):
+def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=True):
     """Run model multiple times, measuring execution time."""
     times, results = [], None
     print(bolden("\n[Repeated Runs Timing]"))
@@ -99,7 +99,7 @@ def timed_runs(texts, model, num_runs, run_fn, include_warmup=True):
     # Actual measured runs
     for i in range(num_runs):
         start = time.perf_counter()
-        out = run_fn(texts, model)
+        out = run_fn(texts, model, batch_size)
         if results is None:
             results = out  # save predictions once
         t = time.perf_counter() - start
@@ -118,7 +118,8 @@ def main():
     # ================== CONFIG ==================
     USE_CPU = False         # using cpu or gpu
     BATCH = True           # using batched or not
-    FORMAT = "JSON"          # what type of file for GT
+    FORMAT = "CSV"          # what type of file for GT
+    BATCH_SIZE = 16        # batch size if using batched
     REPEAT_RUNS = 8         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
@@ -140,10 +141,10 @@ def main():
     print("\n\n======= START BENCHMARK  =======\n")
 
     print_environment_info(cpu=USE_CPU, batch=BATCH)
-    manual_timing(texts=texts, model=refined_model, run_fn=run_fn)
-    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn)
-    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn)
-    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn)
+    manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
+    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
+    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=BATCH_SIZE)
+    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=BATCH_SIZE)
 
     # ======= Accuracy  =======
     print(bolden("\n[Accuracy]"))

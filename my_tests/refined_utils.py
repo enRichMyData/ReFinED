@@ -161,17 +161,17 @@ def load_model(USE_CPU=False):
         device=device  #    <--------- Decides to use 'cpu'  or 'gpu'
     )
 
-def run_refined_single(texts, model):
+def run_refined_single(texts, model, unused_arg=None):
     """Process a list of texts through ReFinED."""
     return [model.process_text(t) for t in texts]
 
-def run_refined_batch(texts, model, max_batch_size: int = 16):
+def run_refined_batch(texts, model, batch_size: int = 16):
     """
     Process a list of texts through ReFinED using batch processing.
     """
     docs = model.process_text_batch(
         texts,
-        max_batch_size=max_batch_size,
+        max_batch_size=batch_size, # <--- TWEAK FOR BETTER PERFORMANCE {16, 32, 64, 128}
         prune_ner_types=True,
         return_special_spans=True
     )
