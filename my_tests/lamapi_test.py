@@ -4,7 +4,7 @@ import requests
 import json
 
 LAMAPI_BASE = "https://lamapi.hel.sintef.cloud"
-LAMAPI_TOKEN = "lamapi_demo_2023"
+LAMAPI_TOKEN = "######"
 
 
 # Example: POST /entity/bow
