@@ -33,6 +33,7 @@ def main():
 
     datasets = get_datasets_obj(preprocessor=refined.preprocessor)
 
+    # OLD
     evaluation_dataset_name_to_docs = {
         "AIDA": list(datasets.get_aida_docs(
             split="dev",
@@ -41,6 +42,15 @@ def main():
             include_spans=True,
         ))
     }
+    # NEW
+    evaluation_dataset_name_to_docs = {
+        "CUSTOM": list(datasets.get_companies_docs(
+            split="test",
+            include_gold_label=True,
+            include_spans=True
+        ))
+    }
+
     start_fine_tuning_task(refined=refined,
                            fine_tuning_args=fine_tuning_args,
                            train_docs=list(datasets.get_aida_docs(split="train", include_gold_label=True)),
