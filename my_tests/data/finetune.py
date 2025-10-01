@@ -38,6 +38,8 @@ def get_movie_docs(
     # Merge by row index
     frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
 
+    print(frame.iloc[0])
+
     docs = []
     for _, row in frame.iterrows():
         # Create document text

@@ -320,7 +320,7 @@ class Datasets:
         """
         Load movie documents with entity spans for fine-tuning.
         """
-        data_path = "data"
+        data_path = "my_tests/data"
         filename = f"movies_{split}.csv"  # extendable beyond train
         folder = filename.split("_")[0]
 
@@ -450,7 +450,7 @@ class Datasets:
         """
         Load company documents with entity spans for fine-tuning.
         """
-        data_path = "data"
+        data_path = "my_tests/data"
         filename = f"companies_{split}.csv"  # extendable beyond train
         folder = filename.split("_")[0]
 
