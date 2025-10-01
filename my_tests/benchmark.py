@@ -20,11 +20,13 @@ import tracemalloc
 import sys
 import torch
 import numpy as np
+import platform
+import os
 
 
 
 # ================== TEST FUNCTIONS ==================
-def print_environment_info(cpu, batch):
+def print_environment_info(cpu, batch, batch_size):
     print(bolden("\n[Environment Info]"))
     print("Python:", sys.version)
     print("PyTorch:", torch.__version__)
@@ -33,7 +35,15 @@ def print_environment_info(cpu, batch):
         print(blue_info_wrap("Running on GPU: "+torch.cuda.get_device_name(0)))
     else:
         print(blue_info_wrap("Running on CPU"))
-    if batch: print(blue_info_wrap("Using Batched mode"))
+        print(blue_info_wrap(f"System: {platform.system()} {platform.release()}"))
+        print(blue_info_wrap(f"Machine: {platform.machine()}"))
+        print(blue_info_wrap(f"Processor: {platform.processor()}"))
+        print(blue_info_wrap(f"Architecture: {platform.architecture()[0]}"))
+        print(blue_info_wrap(f"Cores: {os.cpu_count()}"))
+
+    if batch: 
+        print(blue_info_wrap("Using Batched mode"))
+        print(blue_info_wrap(f"Batch size: {batch_size}"))
     print("\n")
 
 def manual_timing(texts, model, run_fn, batch_size):
@@ -84,7 +94,7 @@ def cprofile_profiling(texts, model, top_stats, run_fn, batch_size):
     stats.print_stats(top_stats)
 
 
-def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=True):
+def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=False):
     """Run model multiple times, measuring execution time."""
     times, results = [], None
     print(bolden("\n[Repeated Runs Timing]"))
@@ -92,38 +102,51 @@ def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=True):
     # Optional warmup run
     if include_warmup:
         start = time.perf_counter()
-        _ = run_fn(texts, model)
+        out = run_fn(texts, model, batch_size)
         t = time.perf_counter() - start
+        times.append(t)
+        results = out  # save predictions from the warmup run
         print(f"Warmup Run: {t:.2f}s")
 
-    # Actual measured runs
+    # decide which runs to print
+    if num_runs <= 10:
+        print_indices = set(range(num_runs))
+    else:
+        step = max(1, num_runs // int(num_runs**0.5))
+        print_indices = set(range(0, num_runs, step)) | {num_runs - 1}
+
+    # measured runs
     for i in range(num_runs):
         start = time.perf_counter()
         out = run_fn(texts, model, batch_size)
         if results is None:
-            results = out  # save predictions once
+            results = out  # save predictions from first run if warmup not included
         t = time.perf_counter() - start
         times.append(t)
-        print(f"Run {i+1}: {t:.2f}s")
 
-    avg = sum(times) / len(times) if times else 0.0
-    print(f"Average over {num_runs} runs: {avg:.2f}s\n")
+        if i in print_indices:
+            print(f"Run {i+1}: {t:.2f}s")
+
+    avg = sum(times[-num_runs:]) / num_runs  # average only over measured runs
+    print(f"\nAverage over {num_runs} runs: {avg:.2f}s\n")
 
     return times, results
 
 
 
 
+
+
 def main():
     # ================== CONFIG ==================
-    USE_CPU = False         # using cpu or gpu
+    USE_CPU = True         # using cpu or gpu
     BATCH = True           # using batched or not
     FORMAT = "CSV"          # what type of file for GT
-    BATCH_SIZE = 16        # batch size if using batched
-    REPEAT_RUNS = 8         # Repeat runs to account for cold start
+    BATCH_SIZE = 32        # batch size if using batched
+    REPEAT_RUNS = 50         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
-
+   
 
     # ======= Command-line parsing =======
     input_file, verbose = parse_args()
@@ -140,7 +163,7 @@ def main():
     # ======= Run benchmark =======
     print("\n\n======= START BENCHMARK  =======\n")
 
-    print_environment_info(cpu=USE_CPU, batch=BATCH)
+    print_environment_info(cpu=USE_CPU, batch=BATCH, batch_size=BATCH_SIZE)
     manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
     peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
     cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=BATCH_SIZE)
