@@ -138,7 +138,10 @@ def load_model(USE_CPU=False):
     Now includes use of CPU / GPU
     """
 
-    model = "wikipedia_model_with_numbers"
+    # unmodified_model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
+    modified_model = "fine_tuned_models/merged_fine_tune1.1/f1_0.8073" # fine tuned med ~8% av treningsdata (5k hver)
+    model = modified_model
+
     entitiy_set = "wikidata"
 
     print(green_info_wrap(f"[INFO] Loading ReFinED model: "
@@ -157,6 +160,7 @@ def load_model(USE_CPU=False):
     return Refined.from_pretrained(
         model_name=model,
         entity_set=entitiy_set,
+        use_precomputed_descriptions=False,
         download_files=True, # optional, downloads from S3 to local
         device=device  #    <--------- Decides to use 'cpu'  or 'gpu'
     )

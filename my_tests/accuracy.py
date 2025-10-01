@@ -56,10 +56,10 @@ def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
 def main():
     # ======== CONFIG === ========
     USE_CPU = False         # using cpu or gpu
-    BATCH = False           # using batched or not
+    BATCH = True           # using batched or not
     LINE_LIMIT = None          # number of lines to process, None for no limit
     FORMAT = "CSV"          # what type of file for GT
-    BATCH_SIZE = 16        # batch size if using batched
+    BATCH_SIZE = 256        # batch size if using batched
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
