@@ -2,6 +2,9 @@
 *.iml
 .idea/
 
+# giant models
+fine_tuned_models/*
+
 # Python #
 __pycache__/
 *.py[cod]
