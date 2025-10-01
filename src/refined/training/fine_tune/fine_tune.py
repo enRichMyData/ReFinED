@@ -50,8 +50,9 @@ def main():
 
     # NEW
     # --- Split training set into train/dev ---
-    all_companies_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))[:5]
-    all_movies_docs = list(datasets.get_movie_docs(split="train", include_gold_label=True))[:5]
+    LIMIT = 5000
+    all_companies_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))[:LIMIT]
+    all_movies_docs = list(datasets.get_movie_docs(split="train", include_gold_label=True))[:LIMIT]
 
     # all_train_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))
     all_train_docs = all_companies_docs + all_movies_docs
@@ -68,6 +69,8 @@ def main():
     evaluation_dataset_name_to_docs = {
         "DEV": dev_docs
     }
+
+    # fine_tuning_args.restore_model_path = "fine_tuned_models/merged_fine_tune/f1_0.5714/model.pt"
 
     # --- Run training ---
     start_fine_tuning_task(
@@ -122,7 +125,7 @@ def start_fine_tuning_task(refined: 'Refined',
     for params in model.parameters():
         params.requires_grad = True
 
-    model.entity_disambiguation.dropout.p = fine_tuning_args.ed_dropout
+    model.entity_disambiguation.dropout.p = .ed_dropout
     model.entity_typing.dropout.p = fine_tuning_args.et_dropout
 
     param_groups = [
