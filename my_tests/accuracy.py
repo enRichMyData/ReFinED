@@ -1,11 +1,11 @@
-from my_tests.refined_utils import \
-    parse_args, \
+from my_tests.utility.refined_utils import \
     load_input_file, \
     load_model, \
     run_refined_single, \
     run_refined_batch, \
     bcolors
 
+from my_tests.utility.testing_args import parse_args
 import time
 import sys
 import torch
@@ -55,25 +55,27 @@ def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
 
 def main():
     # ======== CONFIG === ========
-    USE_CPU = False         # using cpu or gpu
-    BATCH = True           # using batched or not
     LINE_LIMIT = None          # number of lines to process, None for no limit
-    FORMAT = "CSV"          # what type of file for GT
-    BATCH_SIZE = 256        # batch size if using batched
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
     # ======= Command-line parsing =======
-    input_file, verbose = parse_args()
+    args = parse_args()
+    input_file = args.input_file
+    verbose = args.verbose
+    batch_size = args.batch_size
+    device = args.device
+    gt_format = args.format
+    batch = args.batch
 
     # ======= Load CSV and truths =======
-    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, FORMAT)
+    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
 
     # ======= Load model =======
-    refined_model = load_model(USE_CPU=USE_CPU)
+    refined_model = load_model(device=device)
 
     # Retrieve texts from running ReFinED entity3. linker
     texts = texts[:LINE_LIMIT]
@@ -81,8 +83,8 @@ def main():
 
     # ======= Run inference =======
     start_time = time.time()
-    if BATCH: all_spans = run_refined_single(texts=texts, model=refined_model)
-    else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=BATCH_SIZE)
+    if batch: all_spans = run_refined_single(texts=texts, model=refined_model)
+    else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
     duration = time.time() - start_time
 
     # ======= Run measurements =======
@@ -92,13 +94,13 @@ def main():
 
     # ============ CPU SWITCH ======================= #
     print("\nCUDA available?", torch.cuda.is_available())
-    if torch.cuda.is_available() and not USE_CPU:
+    if torch.cuda.is_available() and device == "gpu":
         print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
     else:
         print("Running on CPU\n")
     # =============================================== #
     print(f"Results from file: {input_file}")
-    print(f"Truth-values retrieved using {FORMAT}")
+    print(f"Truth-values retrieved using {gt_format}")
 
 
 if __name__ == "__main__":

@@ -1,13 +1,10 @@
-from collections import OrderedDict
-
-from my_tests.process_file import process_csv
-
 from refined.inference.processor import Refined
-
-import os
-import torch
-import argparse
+from my_tests.process_file import process_csv
+from collections import OrderedDict
 import pandas as pd
+import torch
+import os
+
 
 class bcolors:
     OKBLUE = '\033[94m'
@@ -32,32 +29,6 @@ def blue_info_wrap(text: str):
     return bcolors.OKBLUE + bcolors.BOLD + text + bcolors.ENDC
 
 # ---------------- Command-line & file loader ----------------
-def parse_args(supported_files=None):
-    """
-    Parses command line arguments for input CSV and optional --verbose.
-    supported_files: list of filenames to display in help.
-    """
-    if supported_files is None:
-        supported_files = ['imdb_top_100.csv', 'companies_test.csv', 'movies_test.csv', 'SN_test.csv']
-
-    parser = argparse.ArgumentParser(
-        description="Run ReFinED entity linking and measure accuracy.",
-        formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Show detailed prediction info"
-    )
-    parser.add_argument(
-        "input_file",
-        type=str,
-        help="Input CSV file. Supported:\n" +
-             "\n".join([f"\t-'{f}'" for f in supported_files])
-    )
-
-    args = parser.parse_args()
-    return args.input_file, args.verbose
 
 def get_truth_path(folder: str, default_data: str, filename: str):
     """Return path to truth file if it exists, else None (with logging)."""
@@ -132,15 +103,14 @@ def load_input_file(filename: str, default_data: str, format: str):
     return texts, truths
 
 
-def load_model(USE_CPU=False):
+def load_model(device=False):
     """
     Loads ReFinED pre-trained model.
     Now includes use of CPU / GPU
     """
 
-    # unmodified_model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
-    modified_model = "fine_tuned_models/merged_fine_tune1.1/f1_0.8073" # fine tuned med ~8% av treningsdata (5k hver)
-    model = modified_model
+    model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
+    # model = "fine_tuned_models/merged_fine_tune1.1/f1_0.8073" # fine tuned med ~8% av treningsdata (5k hver)
 
     entitiy_set = "wikidata"
 
@@ -149,7 +119,7 @@ def load_model(USE_CPU=False):
                           + green_info_wrap(", entity set: ")
                           + bcolors.OKCYAN +f"'{entitiy_set}'"))
 
-    device = "cpu" if USE_CPU else "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if device == "gpu" else "cpu"
 
     if device == "cpu":
         import warnings

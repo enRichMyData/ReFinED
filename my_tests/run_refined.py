@@ -1,4 +1,5 @@
-from my_tests.refined_utils import parse_args, load_input_file, load_model, run_refined_single, run_refined_batch
+from my_tests.utility.refined_utils import load_input_file, load_model, run_refined_single, run_refined_batch
+from my_tests.utility.testing_args import parse_args
 
 import sys
 import torch
@@ -37,31 +38,35 @@ def fetch_wikidata_labels(qids):
 
 def main():
     # ======== CONFIG === ========
-    USE_CPU = False         # using cpu or gpu
-    BATCH = False           # using batched or not
     LINE_LIMIT = 50            # lines to process, None for no limit
-    FORMAT = "JSON"          # what type of file for GT
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
 
 
     # ======= Command-line parsing =======
-    input_file, verbose = parse_args()
+    # ======= Command-line parsing =======
+    args = parse_args()
+    input_file = args.input_file
+    verbose = args.verbose
+    batch_size = args.batch_size
+    device = args.device
+    gt_format = args.format
+    batch = args.batch
 
     # ======= Load CSV and truths =======
-    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, FORMAT)
+    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
 
     # ======= Load model =======
-    refined_model = load_model(USE_CPU=USE_CPU)
+    refined_model = load_model(device=device)
 
     # Restricts number of texts to process
     texts = texts[:LINE_LIMIT]
 
     # ======= Run inference =======
-    if BATCH: all_spans = run_refined_single(texts=texts, model=refined_model)
-    else: all_spans = run_refined_batch(texts=texts, model=refined_model)
+    if batch: all_spans = run_refined_single(texts=texts, model=refined_model)
+    else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
 
     # Process each input line
     for raw_line, doc_spans in zip(texts, all_spans):
@@ -110,7 +115,7 @@ def main():
 
     # ============ CPU/GPU INFO ===================== #
     print("CUDA available?", torch.cuda.is_available())
-    if torch.cuda.is_available() and not USE_CPU:
+    if torch.cuda.is_available() and device != "cpu":
         print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
     else:
         print("Running on CPU\n")

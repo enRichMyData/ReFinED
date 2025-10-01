@@ -2,8 +2,7 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.refined_utils import \
-    parse_args, \
+from my_tests.utility.refined_utils import \
     load_input_file, \
     load_model, \
     run_refined_single, \
@@ -11,6 +10,7 @@ from my_tests.refined_utils import \
     bolden, \
     blue_info_wrap
 
+from my_tests.utility.testing_args import parse_args
 from my_tests.accuracy import measure_accuracy
 
 import importlib
@@ -26,12 +26,12 @@ import os
 
 
 # ================== TEST FUNCTIONS ==================
-def print_environment_info(cpu, batch, batch_size):
+def print_environment_info(device, batch, batch_size):
     print(bolden("\n[Environment Info]"))
     print("Python:", sys.version)
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
-    if torch.cuda.is_available() and not cpu:
+    if torch.cuda.is_available() and device != "cpu":
         print(blue_info_wrap("Running on GPU: "+torch.cuda.get_device_name(0)))
     else:
         print(blue_info_wrap("Running on CPU"))
@@ -139,35 +139,37 @@ def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=False)
 
 def main():
     # ================== CONFIG ==================
-    USE_CPU = True         # using cpu or gpu
-    BATCH = True           # using batched or not
-    FORMAT = "CSV"          # what type of file for GT
-    BATCH_SIZE = 32        # batch size if using batched
     REPEAT_RUNS = 50         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
    
 
     # ======= Command-line parsing =======
-    input_file, verbose = parse_args()
+    args = parse_args()
+    input_file = args.input_file
+    verbose = args.verbose
+    batch_size = args.batch_size
+    device = args.device
+    gt_format = args.format
+    batch = args.batch
 
     # ======= Load CSV and truths =======
-    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=FORMAT)
+    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=gt_format)
 
     # ======= Load model =======
-    refined_model = load_model(USE_CPU=USE_CPU)
+    refined_model = load_model(device=device)
 
     # ======= Select run function based on BATCH flag =======
-    run_fn = run_refined_batch if BATCH else run_refined_single
+    run_fn = run_refined_batch if batch else run_refined_single
 
     # ======= Run benchmark =======
     print("\n\n======= START BENCHMARK  =======\n")
 
-    print_environment_info(cpu=USE_CPU, batch=BATCH, batch_size=BATCH_SIZE)
-    manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
-    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=BATCH_SIZE)
-    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=BATCH_SIZE)
-    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=BATCH_SIZE)
+    print_environment_info(device=device, batch=batch, batch_size=batch_size)
+    manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=batch_size)
+    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=batch_size)
+    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=batch_size)
+    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=batch_size)
 
     # ======= Accuracy  =======
     print(bolden("\n[Accuracy]"))

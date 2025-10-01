@@ -125,7 +125,7 @@ def start_fine_tuning_task(refined: 'Refined',
     for params in model.parameters():
         params.requires_grad = True
 
-    model.entity_disambiguation.dropout.p = .ed_dropout
+    model.entity_disambiguation.dropout.p = fine_tuning_args.ed_dropout
     model.entity_typing.dropout.p = fine_tuning_args.et_dropout
 
     param_groups = [
