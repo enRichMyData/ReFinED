@@ -138,7 +138,7 @@ def load_model(USE_CPU=False):
     Now includes use of CPU / GPU
     """
 
-    model = "wikipedia_model_with_numbers"
+    model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
     entitiy_set = "wikidata"
 
     print(green_info_wrap(f"[INFO] Loading ReFinED model: "
