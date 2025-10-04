@@ -109,8 +109,13 @@ def load_model(device=False):
     Now includes use of CPU / GPU
     """
 
-    model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
-    # model = "fine_tuned_models/merged_fine_tune1.1/f1_0.8073" # fine tuned med ~8% av treningsdata (5k hver)
+    # model = "wikipedia_model_with_numbers"  #TODO:  <--- ENDRE TIL FINE TUNED MODELL ?
+    # model = "fine_tuned_models/merged_10k/f1_0.9229" # fine tuned med ~8% av treningsdata (5k hver)
+    # model = "fine_tuned_models/merged_60k/f1_0.9254" # fine tuned med ~44% av treningsdata (30k hver)
+    # model = "fine_tuned_models/companies_full/f1_0.8711" # fine tuned med 100% av treningsdata fra companies.csv
+    # model = "fine_tuned_models/movies_full/f1_0.9237" # fine tuned med 100% av treningsdata fra companies.csv
+    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
+
 
     entitiy_set = "wikidata"
 

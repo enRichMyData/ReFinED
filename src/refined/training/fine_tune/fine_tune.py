@@ -50,11 +50,12 @@ def main():
 
     # NEW
     # --- Split training set into train/dev ---
-    LIMIT = 5000
+    LIMIT = None
     all_companies_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))[:LIMIT]
     all_movies_docs = list(datasets.get_movie_docs(split="train", include_gold_label=True))[:LIMIT]
 
     all_train_docs = all_companies_docs + all_movies_docs
+
     import random
     random.shuffle(all_train_docs)  # disperses biases
 
