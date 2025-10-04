@@ -1,0 +1,6 @@
+
+=== Run 2025-10-04 16:41:13 ===
+File: movies_test.csv
+Accuracy: 89.20%
+EVAL-ED: P=0.999, R=0.908, F1=0.951
+
