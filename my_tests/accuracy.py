@@ -3,12 +3,46 @@ from my_tests.utility.refined_utils import \
     load_model, \
     run_refined_single, \
     run_refined_batch, \
+    bolden, \
     bcolors
+
+from refined.evaluation.evaluation import get_datasets_obj, evaluate
 
 from my_tests.utility.testing_args import parse_args
 import time
 import sys
 import torch
+import datetime
+import os
+
+
+def evaluate_refined(refined, input_file, LIMIT):
+    print(bolden("\n=== Running ReFinED Evaluation ==="))
+    datasets = get_datasets_obj(preprocessor=refined.preprocessor)
+
+    if "companies" in input_file.lower():
+        eval_docs = list(datasets.get_companies_docs(split="test", include_gold_label=True))[:LIMIT]
+
+    elif "movies" in input_file.lower():
+        eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))[:LIMIT]
+
+    # built-in revaluation by refined
+    final_metrics = evaluate(
+        refined=refined,
+        evaluation_dataset_name_to_docs={"EVAL": eval_docs},
+        el=False,
+        ed=True
+    )
+
+    # print results
+    print(bolden("\n=== Final Evaluation Results ==="))
+    for dataset_name, metrics in final_metrics.items():
+        print(f"\nDataset: {dataset_name}")
+        print(f"  Precision: {metrics.get_precision():.3f}")
+        print(f"  Recall:    {metrics.get_recall():.3f}")
+        print(f"  F1 Score:  {metrics.get_f1():.3f}")
+
+    return final_metrics
 
 
 def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
@@ -52,11 +86,33 @@ def measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=False):
     else: color = bcolors.FAIL
     print(color + bcolors.BOLD + f"\nAccuracy: {accuracy:.2f}% ({correct_count}/{total} correct)"+bcolors.ENDC)
 
+    return accuracy
+
+def log_evaluation(DATA_FOLDER, accuracy, metrics, input_file, batch_size, gpu):
+    """saves result to file"""
+
+    # Define default log directory
+    log_dir = os.path.join(DATA_FOLDER, "logs")
+    os.makedirs(log_dir, exist_ok=True)
+
+    log_path = os.path.join(log_dir, f"evaluation_log_{input_file}_{batch_size}_{gpu}.txt")
+
+    print(f"\nSaving log-file: '{log_path}'")
+
+    with open(log_path, "a") as f:
+        f.write(f"\n=== Run {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+        f.write(f"File: {input_file}\n")
+        f.write(f"Accuracy: {accuracy:.2f}%\n")
+        for dataset_name, metrics in metrics.items():
+            f.write(f"{dataset_name}: P={metrics.get_precision():.3f}, R={metrics.get_recall():.3f}, F1={metrics.get_f1():.3f}\n")
+        f.write("\n")
+
 
 def main():
     # ======== CONFIG === ========
     LINE_LIMIT = None          # number of lines to process, None for no limit
-    DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
+    TEST_DIR = "my_tests"
+    DEFAULT_DATA_FOLDER = f"{TEST_DIR}/data"   # location of data-files
 
 
     # ======= Command-line parsing =======
@@ -87,10 +143,15 @@ def main():
     else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
     duration = time.time() - start_time
 
+
     # ======= Run measurements =======
-    measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
+    accuracy = measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
 
     print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
+
+    # ======= Run official evaluation =======
+    metrics = evaluate_refined(refined_model, input_file, LINE_LIMIT)
+
 
     # ============ CPU SWITCH ======================= #
     print("\nCUDA available?", torch.cuda.is_available())
@@ -101,6 +162,8 @@ def main():
     # =============================================== #
     print(f"Results from file: {input_file}")
     print(f"Truth-values retrieved using {gt_format}")
+
+    log_evaluation(TEST_DIR, accuracy, metrics, input_file, batch_size, torch.cuda.get_device_name(0))
 
 
 if __name__ == "__main__":
