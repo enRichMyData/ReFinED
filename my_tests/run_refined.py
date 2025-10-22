@@ -1,19 +1,24 @@
-from my_tests.utility.refined_utils import load_input_file, load_model, run_refined_single, run_refined_batch
-from my_tests.utility.testing_args import parse_args
-
+from my_tests.utility.test_utils import (
+    load_model,
+    run_refined_single,
+    run_refined_batch,
+)
+from my_tests.utility.testing_args import parse_args                    # CLI
+from utility.process_files import load_input_file                       # input-handling
 import sys
 import torch
 
 
-#############################################################################################
-# Fetches candidate descriptions (ONLINE)
-import requests
+# --------------------------------------------------------------------------
+# Fetches candidate descriptions (via Wikidata API)
+# --------------------------------------------------------------------------
 
 HEADERS = {
-    "User-Agent": "ReFinED-EntityLinker/1.0 (https://github.com/borgebj; borgebj@ifi.uio.no)"
+    "User-Agent": "ReFinED-EntityLinker/1.0 (https://github.com/#USERNAME#; #MAIL)" # <-- put in to use
 }
 
 def fetch_wikidata_labels(qids):
+    import requests
     url = "https://www.wikidata.org/w/api.php"
     params = {
         "action": "wbgetentities",
@@ -32,17 +37,14 @@ def fetch_wikidata_labels(qids):
     return labels
 
 
-# NOTE Bytt ut dette kallet med fungerende LamAPI kall !
-#############################################################################################
-
+# --------------------------------------------------------------------------
+# Main execution
+# --------------------------------------------------------------------------
 
 def main():
-    # ======== CONFIG === ========
-    LINE_LIMIT = 50            # lines to process, None for no limit
-    DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
+    LINE_LIMIT = 50
+    DEFAULT_DATA_FOLDER = "my_tests/data"
 
-
-    # ======= Command-line parsing =======
     # ======= Command-line parsing =======
     args = parse_args()
     input_file = args.input_file
@@ -52,29 +54,35 @@ def main():
     gt_format = args.format
     batch = args.batch
 
-    # ======= Load CSV and truths =======
-    try: texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
+    # ======= Load input file =======
+    try:
+        texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
 
+    texts = texts[:LINE_LIMIT]
+
     # ======= Load model =======
     refined_model = load_model(device=device)
 
-    # Restricts number of texts to process
-    texts = texts[:LINE_LIMIT]
-
     # ======= Run inference =======
-    if batch: all_spans = run_refined_single(texts=texts, model=refined_model)
-    else: all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
+    if batch:
+        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
+    else:
+        all_spans = run_refined_single(texts=texts, model=refined_model)
 
-    # Process each input line
+    # ======= Process each input line =======
     for raw_line, doc_spans in zip(texts, all_spans):
         print("\n" + "=" * 100)
         print(f"{raw_line}\n")
 
         for span in doc_spans[:1]:
-            pred_ent = span.predicted_entity
+            pred_ent = getattr(span, "predicted_entity", None)
+            if pred_ent is None:
+                print(f"  Mention: [{span.text}] — No predicted entity.")
+                continue
+
             pred_qid = getattr(pred_ent, "wikidata_entity_id", None)
             pred_title = getattr(pred_ent, "wikipedia_entity_title", None)
 
@@ -82,21 +90,20 @@ def main():
             print(f"  → Predicted entity: [{pred_title} (QID: {pred_qid})]")
             print(f"    Type: {span.coarse_type}")
 
-            # Confidence for predicted entity
+            # Candidate score
+            confidence = None
             if span.candidate_entities:
-                confidence = None
                 for qid, score in span.candidate_entities:
                     if qid == pred_qid:
                         confidence = score
                         break
                 if confidence is not None:
-                    print(f"    Model confidence: {confidence * 100:.2f}%")
+                    print(f"    Candidate retrieval score: {confidence * 100:.2f}%")
                 else:
-                    print("    Model confidence: N/A")
+                    print("    Candidate retrieval score: N/A")
             else:
                 print("    No candidate entities.")
 
-            # Normalized DATE
             if span.coarse_type == "DATE":
                 print(f"    Normalized date: {span.date}")
 
@@ -112,14 +119,10 @@ def main():
 
             print("-" * 60)
 
-
-    # ============ CPU/GPU INFO ===================== #
-    print("CUDA available?", torch.cuda.is_available())
-    if torch.cuda.is_available() and device != "cpu":
-        print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
-    else:
-        print("Running on CPU\n")
-    # =============================================== #
+    # ======= Hardware info =======
+    gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+    print(f"\nCUDA available? {torch.cuda.is_available()}")
+    print(f"Running on: {gpu_name}\n")
 
     # NOTE!
     # For Top-K candidates:

@@ -320,6 +320,7 @@ class Datasets:
         """
         Load movie documents with entity spans for fine-tuning.
         """
+        # -------------------- Load data --------------------
         data_path = "my_tests/data"
         filename = f"movies_{split}.csv"  # extendable beyond train
         folder = filename.split("_")[0]
@@ -332,8 +333,8 @@ class Datasets:
         dftext = pd.read_csv(text_path)
         dftruth = pd.read_csv(truth_path)
         dftruth = dftruth[dftruth["tableName"] == f"{folder}_{split}"]  # filter to relevant split
-        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "",
-                                                          regex=False)  # only use QID
+        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "", regex=False)  # only use QID
+        #-----------------------------------------------------
 
         # Optionally filter out rows not in KB
         if filter_not_in_kb:
