@@ -23,14 +23,19 @@ def measure_accuracy(pred_spans, truths, verbose=False):
     total = min(len(pred_spans), len(truths))
     correct = 0
 
+    print("\nPredicted\n", pred_spans)
+    print("\nTruths\n", truths)
+
     # compare predicted and ground truth in pairs (pred, gt)
-    for i, (pred_span, truth_qids) in enumerate(zip(pred_spans, truths)):
+    for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
         if not pred_span or not truth_qids: continue
+
 
         # only consider first entity, aka company/movie
         primary_span = pred_span[0] if pred_span else None
-
         pred_qid = getattr(primary_span.predicted_entity, "wikidata_entity_id", None) if pred_span else None
+
+        print(pred_qid, " - ", truth_qids)
 
         if pred_qid in truth_qids:
             correct += 1
@@ -97,7 +102,7 @@ def evaluate_refined(refined, input_file, LINE_LIMIT):
 
 def main():
     # ------- CONFIG -------
-    LINE_LIMIT = 5          # number of lines to process, None for no limit
+    LINE_LIMIT = 500          # number of lines to process, None for no limit
     TEST_DIR = "my_tests"
     DEFAULT_DATA_FOLDER = f"{TEST_DIR}/data"   # location of data-files
 

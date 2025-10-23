@@ -7,7 +7,7 @@ from my_tests.utility.test_utils import (
     run_refined_single,
     run_refined_batch,
     bolden,
-    blue_info_wrap
+    blue_info
 )
 from my_tests.utility.testing_args import parse_args                    # CLI
 from utility.process_files import load_input_file                       # input-handling
@@ -31,18 +31,18 @@ def print_environment_info(device, batch, batch_size):
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
     if torch.cuda.is_available() and device != "cpu":
-        print(blue_info_wrap("Running on GPU: "+torch.cuda.get_device_name(0)))
+        print(blue_info("Running on GPU: " + torch.cuda.get_device_name(0)))
     else:
-        print(blue_info_wrap("Running on CPU"))
-        print(blue_info_wrap(f"System: {platform.system()} {platform.release()}"))
-        print(blue_info_wrap(f"Machine: {platform.machine()}"))
-        print(blue_info_wrap(f"Processor: {platform.processor()}"))
-        print(blue_info_wrap(f"Architecture: {platform.architecture()[0]}"))
-        print(blue_info_wrap(f"Cores: {os.cpu_count()}"))
+        print(blue_info("Running on CPU"))
+        print(blue_info(f"System: {platform.system()} {platform.release()}"))
+        print(blue_info(f"Machine: {platform.machine()}"))
+        print(blue_info(f"Processor: {platform.processor()}"))
+        print(blue_info(f"Architecture: {platform.architecture()[0]}"))
+        print(blue_info(f"Cores: {os.cpu_count()}"))
 
     if batch: 
-        print(blue_info_wrap("Using Batched mode"))
-        print(blue_info_wrap(f"Batch size: {batch_size}"))
+        print(blue_info("Using Batched mode"))
+        print(blue_info(f"Batch size: {batch_size}"))
     print("\n")
 
 def manual_timing(texts, model, run_fn, batch_size):

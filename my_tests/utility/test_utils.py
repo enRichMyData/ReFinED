@@ -17,11 +17,15 @@ def bolden(text: str):
     """Wraps text in bold style."""
     return bcolors.BOLD + text + bcolors.ENDC
 
-def green_info_wrap(text: str):
+def green_info(text: str):
     """Wraps text in a green bold info style."""
     return bcolors.OKGREEN + bcolors.BOLD + text + bcolors.ENDC
 
-def blue_info_wrap(text: str):
+def cyan_info(text: str):
+    """Wraps text in a cyan bold info style."""
+    return bcolors.OKCYAN + bcolors.BOLD + text + bcolors.ENDC
+
+def blue_info(text: str):
     """Wraps text in a blue bold info style."""
     return bcolors.OKBLUE + bcolors.BOLD + text + bcolors.ENDC
 #-----------------------------------------------
@@ -43,10 +47,10 @@ def load_model(device=False, model="wikipedia_model_with_numbers"):
 
     entity_set = "wikidata"
 
-    print(green_info_wrap(f"[INFO] Loading ReFinED model: "
-                          + bcolors.OKCYAN +f"'{model}'" + bcolors.ENDC +"'"
-                          + green_info_wrap(", entity set: ")
-                          + bcolors.OKCYAN +f"'{entity_set}'"))
+    print(green_info(f"[INFO] Loading ReFinED model: "
+                     + bcolors.OKCYAN +f"'{model}'" + bcolors.ENDC +"'"
+                     + green_info(", entity set: ")
+                     + bcolors.OKCYAN +f"'{entity_set}'"))
 
 
     # GPU/CPU selection
