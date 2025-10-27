@@ -39,7 +39,7 @@ def parse_args(supported_files=None):
     )
     parser.add_argument(
         "--format",
-        type=str,
+        type=lambda s: s.upper(),
         choices=["CSV", "JSON"],
         default="CSV",
         help="Format of the ground truth file (default: CSV)"

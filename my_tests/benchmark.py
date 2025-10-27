@@ -2,26 +2,25 @@
 # ReFinED Benchmarking Script
 # =========================================
 
-from my_tests.utility.refined_utils import \
-    load_input_file, \
-    load_model, \
-    run_refined_single, \
-    run_refined_batch, \
-    bolden, \
-    blue_info_wrap
-
-from my_tests.utility.testing_args import parse_args
-from my_tests.accuracy import measure_accuracy
-
+from my_tests.utility.test_utils import (
+    load_model,
+    run_refined_single,
+    run_refined_batch,
+    bolden,
+    blue_info
+)
+from my_tests.utility.testing_args import parse_args                    # CLI
+from utility.process_files import load_input_file                       # input-handling
+from my_tests.accuracy import measure_accuracy                          # accuracy
+import tracemalloc              # memory measure
+import cProfile, pstats         # cprofile
+import time                     # timing
+import platform                 # device info
+import os
+import numpy as np
 import importlib
-import time
-import cProfile, pstats
-import tracemalloc
 import sys
 import torch
-import numpy as np
-import platform
-import os
 
 
 
@@ -32,18 +31,18 @@ def print_environment_info(device, batch, batch_size):
     print("PyTorch:", torch.__version__)
     print("NumPy:", np.__version__)
     if torch.cuda.is_available() and device != "cpu":
-        print(blue_info_wrap("Running on GPU: "+torch.cuda.get_device_name(0)))
+        print(blue_info("Running on GPU: " + torch.cuda.get_device_name(0)))
     else:
-        print(blue_info_wrap("Running on CPU"))
-        print(blue_info_wrap(f"System: {platform.system()} {platform.release()}"))
-        print(blue_info_wrap(f"Machine: {platform.machine()}"))
-        print(blue_info_wrap(f"Processor: {platform.processor()}"))
-        print(blue_info_wrap(f"Architecture: {platform.architecture()[0]}"))
-        print(blue_info_wrap(f"Cores: {os.cpu_count()}"))
+        print(blue_info("Running on CPU"))
+        print(blue_info(f"System: {platform.system()} {platform.release()}"))
+        print(blue_info(f"Machine: {platform.machine()}"))
+        print(blue_info(f"Processor: {platform.processor()}"))
+        print(blue_info(f"Architecture: {platform.architecture()[0]}"))
+        print(blue_info(f"Cores: {os.cpu_count()}"))
 
     if batch: 
-        print(blue_info_wrap("Using Batched mode"))
-        print(blue_info_wrap(f"Batch size: {batch_size}"))
+        print(blue_info("Using Batched mode"))
+        print(blue_info(f"Batch size: {batch_size}"))
     print("\n")
 
 def manual_timing(texts, model, run_fn, batch_size):
@@ -138,13 +137,13 @@ def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=False)
 
 
 def main():
-    # ================== CONFIG ==================
+    # ------- CONFIG -------
     REPEAT_RUNS = 50         # Repeat runs to account for cold start
     TOP_STATS = 20          # Number of cProfile functions to show
     DEFAULT_DATA_FOLDER = "my_tests/data"   # location of data-files
    
 
-    # ======= Command-line parsing =======
+    # ------- Command-line parsing -------
     args = parse_args()
     input_file = args.input_file
     verbose = args.verbose
@@ -153,16 +152,18 @@ def main():
     gt_format = args.format
     batch = args.batch
 
-    # ======= Load CSV and truths =======
+    # ------- Load CSV and truths -------
     texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=gt_format)
 
-    # ======= Load model =======
-    refined_model = load_model(device=device)
+    # ------- Load model -------
+    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
+    refined_model = load_model(device=device, model=model)
 
-    # ======= Select run function based on BATCH flag =======
+    # ------- Select run function based on BATCH flag -------
     run_fn = run_refined_batch if batch else run_refined_single
 
-    # ======= Run benchmark =======
+
+    # ------- Run benchmark -------
     print("\n\n======= START BENCHMARK  =======\n")
 
     print_environment_info(device=device, batch=batch, batch_size=batch_size)
@@ -171,11 +172,12 @@ def main():
     cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=batch_size)
     run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=batch_size)
 
-    # ======= Accuracy  =======
+    # ------- Accuracy  -------
     print(bolden("\n[Accuracy]"))
-    measure_accuracy(spans, truths, LINE_LIMIT=None, verbose=verbose)
+    measure_accuracy(spans, truths, verbose=verbose)
     
     print("\n\n======= END BENCHMARK  =======\n")
+
 
     # plotting for image
     if importlib.util.find_spec("matplotlib") is not None:

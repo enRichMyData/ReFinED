@@ -320,32 +320,24 @@ class Datasets:
         """
         Load movie documents with entity spans for fine-tuning.
         """
-        data_path = "my_tests/data"
-        filename = f"movies_{split}.csv"  # extendable beyond train
-        folder = filename.split("_")[0]
-
+        # -------------------- Load data --------------------
         # Paths
-        text_path = os.path.join(data_path, folder, filename)
-        truth_path = os.path.join(data_path, folder, f"el_{folder}_gt_wikidata.csv")
+        text_path = f"my_tests/data/movies_{split}.csv"
+        truth_path = f"my_tests/data/el_movies_gt_wikidata.csv"
 
         # Load CSVs
         dftext = pd.read_csv(text_path)
         dftruth = pd.read_csv(truth_path)
-        dftruth = dftruth[dftruth["tableName"] == f"{folder}_{split}"]  # filter to relevant split
-        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "",
-                                                          regex=False)  # only use QID
+        dftruth = dftruth[dftruth["tableName"] == f"movies_{split}"]  # filter to relevant split
+        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "", regex=False)  # only use QID
 
-        # Optionally filter out rows not in KB
-        if filter_not_in_kb:
-            dftruth = dftruth[dftruth["entity"].notna() & (dftruth["entity"] != "Q-1")]
-
-        # Merge by row index
+        # Merge text and truth by row index
         frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
 
         docs = []
         for _, row in frame.iterrows():
-            # Create document text
-            text = f"{row['Title']},{row['Release_Date']},{row['Duration']},{row['Genre']},{row['Country']},{row['Language']},{row['Director']}"
+            # Full text line as context
+            text = ",".join(str(row[col]) for col in dftext.columns if pd.notna(row[col]))
 
             # Gold entity if available
             gold_entity = None
@@ -356,12 +348,12 @@ class Datasets:
                     human_readable_name=row["Title"]
                 )
 
-            start = text.find(row['Title'])
-            length = len(row['Title'])
+            start = text.find(str(row['Title']))
+            length = len(str(row['Title']))
 
             spans, md_spans = [], []
-            if include_spans:
-                # EL span (with gold)
+            if include_spans and start != -1:
+                # Gold span for main entity
                 spans = [
                     Span(
                         text=row['Title'],
@@ -382,52 +374,6 @@ class Datasets:
                         coarse_type="MENTION"
                     )
                 ]
-
-                # Release date
-                if pd.notna(row["Release_Date"]):
-                    date_str = str(row["Release_Date"])
-                    date_start = text.find(date_str)
-                    if date_start != -1:
-                        md_spans.append(
-                            Span(
-                                text=date_str,
-                                start=date_start,
-                                ln=len(date_str),
-                                gold_entity=None,
-                                coarse_type="DATE"
-                            )
-                        )
-
-                # Duration
-                if pd.notna(row["Duration"]):
-                    dur_str = str(row["Duration"])
-                    dur_start = text.find(dur_str)
-                    if dur_start != -1:
-                        md_spans.append(
-                            Span(
-                                text=dur_str,
-                                start=dur_start,
-                                ln=len(dur_str),
-                                gold_entity=None,
-                                coarse_type="QUANTITY"
-                            )
-                        )
-
-                # Country, Language, Director
-                for col in ["Country", "Language", "Director"]:
-                    if pd.notna(row[col]):
-                        val = str(row[col])
-                        val_start = text.find(val)
-                        if val_start != -1:
-                            md_spans.append(
-                                Span(
-                                    text=val,
-                                    start=val_start,
-                                    ln=len(val),
-                                    gold_entity=None,
-                                    coarse_type="MENTION"
-                                )
-                            )
 
             # Build doc
             doc = Doc.from_text_with_spans(
@@ -450,32 +396,24 @@ class Datasets:
         """
         Load company documents with entity spans for fine-tuning.
         """
-        data_path = "my_tests/data"
-        filename = f"companies_{split}.csv"  # extendable beyond train
-        folder = filename.split("_")[0]
-
+        # -------------------- Load data --------------------
         # Paths
-        text_path = os.path.join(data_path, folder, filename)
-        truth_path = os.path.join(data_path, folder, f"el_{folder}_gt_wikidata.csv")
+        text_path =  f"my_tests/data/companies/companies_{split}.csv"       # train/test split
+        truth_path = f"my_tests/data/companies/el_companies_gt_wikidata.csv"
 
         # Load CSVs
         dftext = pd.read_csv(text_path)
         dftruth = pd.read_csv(truth_path)
-        dftruth = dftruth[dftruth["tableName"] == f"{folder}_{split}"]  # filter to relevant split
+        dftruth = dftruth[dftruth["tableName"] == f"companies_{split}"]  # train/test split
         dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "",
                                                           regex=False)  # only use QID
-
-        # Optionally filter out rows not in KB
-        if filter_not_in_kb:
-            dftruth = dftruth[dftruth["entity"].notna() & (dftruth["entity"] != "Q-1")]
-
-        # Merge by row index
+        # Merge text and truth by row index in one frame
         frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
 
         docs = []
         for _, row in frame.iterrows():
-            # Create document text
-            text = f"{row['company']},{row['Founded Year']},{row['Website']},{row['X (Twitter)']},{row['Employees']},{row['Coordinates']},{row['Founded By']},{row['Industry']},{row['Country']},{row['Headquarters']}"
+            # Full text line as context
+            text = ",".join(str(row[col]) for col in dftext.columns if pd.notna(row[col]))
 
             # Gold entity if available
             gold_entity = None
@@ -486,12 +424,13 @@ class Datasets:
                     human_readable_name=row["company"]
                 )
 
-            start = text.find(row['company'])
-            length = len(row['company'])
+            # start and length of main entity
+            start = text.find(str(row['company']))
+            length = len(str(row['company']))
 
             spans, md_spans = [], []
-            if include_spans:
-                # EL span (with gold)
+            if include_spans and start != -1:
+                # Gold span for main entity
                 spans = [
                     Span(
                         text=row['company'],
@@ -512,37 +451,6 @@ class Datasets:
                         coarse_type="MENTION"
                     )
                 ]
-
-                # Release date
-                if pd.notna(row["Founded Year"]):
-                    date_str = str(row["Founded Year"])
-                    date_start = text.find(date_str)
-                    if date_start != -1:
-                        md_spans.append(
-                            Span(
-                                text=date_str,
-                                start=date_start,
-                                ln=len(date_str),
-                                gold_entity=None,
-                                coarse_type="DATE"
-                            )
-                        )
-
-                # Country, Language, Director
-                for col in ["Website", "X (Twitter)", "Employees", "Coordinates", "Founded By", "Industry", "Country", "Headquarters"]:
-                    if pd.notna(row[col]):
-                        val = str(row[col])
-                        val_start = text.find(val)
-                        if val_start != -1:
-                            md_spans.append(
-                                Span(
-                                    text=val,
-                                    start=val_start,
-                                    ln=len(val),
-                                    gold_entity=None,
-                                    coarse_type="MENTION"
-                                )
-                            )
 
             # Build doc
             doc = Doc.from_text_with_spans(
