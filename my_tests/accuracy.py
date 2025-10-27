@@ -35,7 +35,11 @@ def measure_accuracy(pred_spans, truths, verbose=False):
             correct += 1
 
         if verbose:
-            print(f"[{i}] Pred: {pred_qid:<10} Truth: {truth_qids} Match: {colorOK if pred_qid in truth_qids else colorFAIL}")
+            print(
+                f"[{i}] Pred: {pred_qid or 'None':<10} "
+                f"Truth: {truth_qids} "
+                f"Match: {colorOK if pred_qid in truth_qids else colorFAIL}"
+            )
 
     # measure accuracy
     accuracy = (correct / total * 100) if total else 0
