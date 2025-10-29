@@ -8,15 +8,11 @@ from my_tests.utility.test_utils import (
 from refined.evaluation.evaluation import get_datasets_obj, evaluate    # built-in eval
 from my_tests.utility.testing_args import parse_args                    # CLI
 from utility.process_files import load_input_file                       # input-handling
+from my_tests.utility.test_utils import bcolors
 import time
 import torch
 import datetime
 import os
-
-
-# color codes
-colorOK = bcolors.OKCYAN
-colorFAIL = bcolors.FAIL
 
 
 def measure_accuracy(pred_spans, truths, verbose=False):
@@ -38,12 +34,13 @@ def measure_accuracy(pred_spans, truths, verbose=False):
             print(
                 f"[{i}] Pred: {pred_qid or 'None':<10} "
                 f"Truth: {truth_qids} "
-                f"Match: {colorOK if pred_qid in truth_qids else colorFAIL}"
+                f"Match: {bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
             )
 
     # measure accuracy
     accuracy = (correct / total * 100) if total else 0
-    print(f"\nAccuracy: {accuracy:.2f}% ({correct}/{total})")
+    rescolor = bcolors.OKGREEN if accuracy > 50 else bcolors.FAIL
+    print(f"{rescolor}\nAccuracy: {accuracy:.2f}% ({correct}/{total}){bcolors.ENDC}")
     return accuracy
 
 

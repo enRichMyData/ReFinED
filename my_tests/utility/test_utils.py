@@ -32,7 +32,7 @@ def blue_info(text: str):
 
 
 
-def load_model(device=False, model="wikipedia_model_with_numbers"):
+def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="wikidata"):
     """
     Loads ReFinED pre-trained model.
     Now includes use of CPU / GPU
@@ -44,8 +44,6 @@ def load_model(device=False, model="wikipedia_model_with_numbers"):
     # model = "fine_tuned_models/companies_full/f1_0.8711" # fine tuned med 100% av treningsdata fra companies.csv
     # model = "fine_tuned_models/movies_full/f1_0.9237" # fine tuned med 100% av treningsdata fra companies.csv
     # model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
-
-    entity_set = "wikidata"
 
     print(green_info(f"[INFO] Loading ReFinED model: "
                      + bcolors.OKCYAN +f"'{model}'" + bcolors.ENDC +"'"
