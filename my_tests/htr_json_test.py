@@ -10,6 +10,7 @@ from my_tests.accuracy import measure_accuracy
 # ---- CONFIG ----
 DATA_FOLDER = "my_tests/data/EL_challenge"
 EVAL_SET = "HTR1"
+# EVAL_SET = "HTR2"
 TABLES_FOLDER = f"{DATA_FOLDER}/{EVAL_SET}/tables"
 CELL_TO_QID_FILE = f"{DATA_FOLDER}/{EVAL_SET}/cell_to_qid.json"
 # MODEL = "fine_tuned_models/merged_full/f1_0.8972" # fine-tuned on movies+companies
