@@ -95,33 +95,30 @@ class Test:
 # t = Test()
 # t.get_hardtable_docs("HTR1")
 
+def generate_samples(n=10, correct_prob=0.6, no_pred_prob=0.2):
+    import random
+    pred_spans = []
+    truths = []
+
+    for i in range(n):
+        truth_qid = f"Q{i+1}"
+        truths.append((0, i, [truth_qid]))
+
+        r = random.random()
+        if r < no_pred_prob:
+            # no prediction
+            pred_spans.append([])
+        elif r < no_pred_prob + correct_prob:
+            # correct prediction
+            pred_spans.append([Span(text=f"Cell{i+1}", start=i*6, ln=5, predicted_entity=Entity(wikidata_entity_id=truth_qid))])
+        else:
+            # wrong prediction
+            wrong_qid = f"Q{n + i + 1}"  # ensure it's different from truth
+            pred_spans.append([Span(text=f"Cell{i+1}", start=i*6, ln=5, predicted_entity=Entity(wikidata_entity_id=wrong_qid))])
+
+    return pred_spans, truths
 
 
-# measure accuracy testing
-pred_spans = [
-    [Span(text="Cell1", start=0, ln=5, predicted_entity=Entity(wikidata_entity_id="Q1"))],   # correct
-    [Span(text="Cell2", start=6, ln=5, predicted_entity=Entity(wikidata_entity_id="Q3"))],   # wrong
-    [],  # no prediction
-    [Span(text="Cell4", start=12, ln=5, predicted_entity=Entity(wikidata_entity_id="Q4"))],  # correct
-    [Span(text="Cell5", start=18, ln=5, predicted_entity=Entity(wikidata_entity_id="Q0"))],  # no prediction
-    [Span(text="Cell6", start=24, ln=5, predicted_entity=Entity(wikidata_entity_id="Q6"))],  # correct
-    [Span(text="Cell7", start=30, ln=5, predicted_entity=Entity(wikidata_entity_id="Q7"))],  # correct
-    [],  # no prediction
-    [Span(text="Cell9", start=36, ln=5, predicted_entity=Entity(wikidata_entity_id="Q9"))],  # correct
-    [Span(text="Cell10", start=42, ln=5, predicted_entity=Entity(wikidata_entity_id="Q10"))],# correct
-]
-
-truths = [
-    (0, 0, ["Q1"]),
-    (0, 1, ["Q2"]),
-    (0, 2, ["Q3"]),
-    (0, 3, ["Q4"]),
-    (0, 4, ["Q5"]),
-    (0, 5, ["Q6"]),
-    (0, 6, ["Q7"]),
-    (0, 7, ["Q8"]),
-    (0, 8, ["Q9"]),
-    (0, 9, ["Q10"]),
-]
+pred_spans, truths = generate_samples(50)
 
 accuracy = measure_accuracy(pred_spans=pred_spans, truths=truths, all_metrics=True, verbose=True)

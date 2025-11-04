@@ -50,10 +50,10 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
             )
 
     # calculate metrics
-    accuracy = tp / (tp + fn + 1e-8)
+    accuracy = tp / (total + 1e-8)
     precision = tp / (tp + fp + 1e-8)
     recall = tp / (tp + fn + 1e-8)
-    f1 = 2 * (precision * recall) / (precision + recall)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
 
     if display:
         rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
