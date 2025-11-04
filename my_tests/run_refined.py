@@ -47,30 +47,25 @@ def main():
 
     # ======= Command-line parsing =======
     args = parse_args()
-    input_file = args.input_file
-    verbose = args.verbose
-    batch_size = args.batch_size
-    device = args.device
-    gt_format = args.format
-    batch = args.batch
+
 
     # ======= Load input file =======
-    try:
-        texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
-    except FileNotFoundError as e:
-        print(e)
-        sys.exit(1)
+    texts, truths = load_input_file(args.input_file, DEFAULT_DATA_FOLDER, args.format)
 
+    # shorten input - for testing
     texts = texts[:LINE_LIMIT]
 
+
     # ======= Load model =======
-    refined_model = load_model(device=device)
+    refined_model = load_model(device=args.device)
+
 
     # ======= Run inference =======
-    if batch:
-        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
+    if args.batch:
+        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=args.batch_size)
     else:
         all_spans = run_refined_single(texts=texts, model=refined_model)
+
 
     # ======= Process each input line =======
     for raw_line, doc_spans in zip(texts, all_spans):

@@ -16,17 +16,16 @@ import os
 
 
 def measure_accuracy(pred_spans, truths, verbose=False):
-    total = min(len(pred_spans), len(truths))
+    total = 0
     correct = 0
 
-    # compare predicted and ground truth in pairs (pred, gt)
+    # compare predicted and ground truth in pairs (pred, gold)
     for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
         if not pred_span or not truth_qids: continue
+        total += 1
 
-        # only consider first entity, aka company/movie
-        primary_span = pred_span[0] if pred_span else None
-        pred_qid = getattr(primary_span.predicted_entity, "wikidata_entity_id", None) if pred_span else None
-
+        # only consider first entity, i.e. company/movie
+        pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
         if pred_qid in truth_qids:
             correct += 1
 
@@ -44,11 +43,11 @@ def measure_accuracy(pred_spans, truths, verbose=False):
     return accuracy
 
 
-def log_evaluation(DATA_FOLDER, accuracy, metrics, input_file, batch_size, gpu):
+def log_evaluation(data_folder, accuracy, metrics, input_file, batch_size, gpu):
     """saves result to file"""
 
     # Define default log directory
-    log_dir = os.path.join(DATA_FOLDER, "logs")
+    log_dir = os.path.join(data_folder, "logs")
     os.makedirs(log_dir, exist_ok=True)
 
     log_path = os.path.join(log_dir, f"evaluation_log_{input_file}_{batch_size}_{gpu}.txt")
@@ -108,30 +107,25 @@ def main():
 
     # ------- Command-line parsing -------
     args = parse_args()
-    input_file = args.input_file
-    verbose = args.verbose
-    batch_size = args.batch_size
-    device = args.device
-    gt_format = args.format
-    batch = args.batch
+
 
     # ------- Load CSV and truths -------
-    texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
+    texts, truths = load_input_file(args.input_file, DEFAULT_DATA_FOLDER, args.format)
 
-
-    # ------- Load model -------
-    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
-    refined_model = load_model(device=device, model=model)
-
-    # Retrieve texts from running ReFinED entity3. linker
+    # shorten input - for testing
     texts = texts[:LINE_LIMIT]
     truths = truths[:LINE_LIMIT]
 
 
+    # ------- Load model -------
+    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
+    refined_model = load_model(device=args.device, model=model)
+
+
     # ------- Run inference -------
     start_time = time.time()
-    if batch:
-        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
+    if args.batch:
+        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=args.batch_size)
     else:
         all_spans = run_refined_single(texts=texts, model=refined_model)
     duration = time.time() - start_time
@@ -141,22 +135,22 @@ def main():
 
 
     # ------- Run measurements -------
-    accuracy = measure_accuracy(pred_spans=all_spans, truths=truths, verbose=verbose)
+    accuracy = measure_accuracy(pred_spans=all_spans, truths=truths, verbose=args.verbose)
 
-    # ------- Run official evaluation -------
-    metrics = evaluate_refined(refined_model, input_file)
+    # ------- Run ReFinED evaluation -------
+    metrics = evaluate_refined(refined_model, args.input_file)
 
 
 
     # ------- CPU SWITCH ------- #
     print("\nCUDA available?", torch.cuda.is_available())
-    if torch.cuda.is_available() and device == "gpu":
+    if torch.cuda.is_available() and args.device == "gpu":
         print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
     else:
         print("Running on CPU\n")
 
-    print(f"Results from file: {input_file}")
-    print(f"Truth-values retrieved using {gt_format}")
+    print(f"Results from file: {args.input_file}")
+    print(f"Truth-values retrieved using {args.gt_format}")
 
     # logging results to file
     # log_evaluation(TEST_DIR, accuracy, metrics, input_file, batch_size, torch.cuda.get_device_name(0))

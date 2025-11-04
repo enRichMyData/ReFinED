@@ -84,6 +84,7 @@ def peak_memory_usage(texts, model, run_fn, batch_size):
 def cprofile_profiling(texts, model, top_stats, run_fn, batch_size):
     """Profile the processing using cProfile."""
     print(bolden("\n[cProfile Profiling]"))
+
     profiler = cProfile.Profile()
     profiler.enable()
     run_fn(texts, model, batch_size)
@@ -95,8 +96,8 @@ def cprofile_profiling(texts, model, top_stats, run_fn, batch_size):
 
 def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=False):
     """Run model multiple times, measuring execution time."""
-    times, results = [], None
     print(bolden("\n[Repeated Runs Timing]"))
+    times, results = [], None
 
     # Optional warmup run
     if include_warmup:
@@ -134,8 +135,6 @@ def timed_runs(texts, model, num_runs, run_fn, batch_size, include_warmup=False)
 
 
 
-
-
 def main():
     # ------- CONFIG -------
     REPEAT_RUNS = 50         # Repeat runs to account for cold start
@@ -145,36 +144,33 @@ def main():
 
     # ------- Command-line parsing -------
     args = parse_args()
-    input_file = args.input_file
-    verbose = args.verbose
-    batch_size = args.batch_size
-    device = args.device
-    gt_format = args.format
-    batch = args.batch
+
 
     # ------- Load CSV and truths -------
-    texts, truths = load_input_file(filename=input_file, default_data=DEFAULT_DATA_FOLDER, format=gt_format)
+    texts, truths = load_input_file(filename=args.input_file, default_data=DEFAULT_DATA_FOLDER, format=args.format)
+
 
     # ------- Load model -------
     model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
-    refined_model = load_model(device=device, model=model)
+    refined_model = load_model(device=args.device, model=model)
+
 
     # ------- Select run function based on BATCH flag -------
-    run_fn = run_refined_batch if batch else run_refined_single
+    run_fn = run_refined_batch if args.batch else run_refined_single
 
 
     # ------- Run benchmark -------
     print("\n\n======= START BENCHMARK  =======\n")
 
-    print_environment_info(device=device, batch=batch, batch_size=batch_size)
-    manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=batch_size)
-    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=batch_size)
-    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=batch_size)
-    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=batch_size)
+    print_environment_info(device=args.device, batch=args.batch, batch_size=args.batch_size)
+    manual_timing(texts=texts, model=refined_model, run_fn=run_fn, batch_size=args.batch_size)
+    peak_memory_usage(texts=texts, model=refined_model, run_fn=run_fn, batch_size=args.batch_size)
+    cprofile_profiling(texts=texts, model=refined_model, top_stats=TOP_STATS, run_fn=run_fn, batch_size=args.batch_size)
+    run_times, spans = timed_runs(texts=texts, model=refined_model, num_runs=REPEAT_RUNS, run_fn=run_fn, batch_size=args.batch_size)
 
     # ------- Accuracy  -------
     print(bolden("\n[Accuracy]"))
-    measure_accuracy(spans, truths, verbose=verbose)
+    measure_accuracy(spans, truths, verbose=args.verbose)
     
     print("\n\n======= END BENCHMARK  =======\n")
 
@@ -188,7 +184,7 @@ def main():
         plt.title("ReFinED Warmup + Repeat Runs")
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(DEFAULT_DATA_FOLDER + f"/warmup_runs_{input_file}.png")
+        plt.savefig(DEFAULT_DATA_FOLDER + f"/warmup_runs_{args.input_file}.png")
 
 if __name__ == "__main__":
     main()
