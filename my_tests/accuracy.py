@@ -17,29 +17,39 @@ import os
 
 def measure_accuracy(pred_spans, truths, verbose=False):
     total = 0
-    correct = 0
+    tp = 0
+    fn = 0
+    fp = 0
 
     # compare predicted and ground truth in pairs (pred, gold)
     for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
-        if not pred_span or not truth_qids: continue
+        if not truth_qids: continue
         total += 1
 
         # only consider first entity, i.e. company/movie
         pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
+    
+        # true positive and false negative
         if pred_qid in truth_qids:
-            correct += 1
+            tp += 1
+        else:
+            fn += 1
+        
+        # false positives
+        if pred_qid is not None and pred_qid not in truth_qids:
+            fp += 1
 
         if verbose:
             print(
-                f"[{i}] Pred: {pred_qid or 'None':<10} "
-                f"Truth: {truth_qids} "
-                f"Match: {bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
+                f"[{i}] Pred: {pred_qid or 'None':<10}"
+                f" Truth: {truth_qids}"
+                f" Match: {bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
             )
 
     # measure accuracy
-    accuracy = (correct / total * 100) if total else 0
-    rescolor = bcolors.OKGREEN if accuracy > 50 else bcolors.FAIL
-    print(f"{rescolor}\nAccuracy: {accuracy:.2f}% ({correct}/{total}){bcolors.ENDC}")
+    accuracy = tp / (tp + fn + 1e-8)
+    rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
+    print(f"{rescolor}\nAccuracy: {accuracy:.3f} ({accuracy*100:.2f})% ({tp}/{total}){bcolors.ENDC}")
     return accuracy
 
 
