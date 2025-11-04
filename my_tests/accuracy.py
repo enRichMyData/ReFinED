@@ -15,7 +15,7 @@ import datetime
 import os
 
 
-def measure_accuracy(pred_spans, truths, verbose=False):
+def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbose=False):
     total = 0
     tp = 0
     fn = 0
@@ -41,16 +41,32 @@ def measure_accuracy(pred_spans, truths, verbose=False):
 
         if verbose:
             print(
-                f"[{i}] Pred: {pred_qid or 'None':<10}"
-                f" Truth: {truth_qids}"
-                f" Match: {bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
+                f"{bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
+                f"[{i}{']':<3} "
+                f"Pred: {pred_qid or 'None':<6}"
+                f"\tTruth: {str(truth_qids):<10}"
+                f"\tMatch: {pred_qid in truth_qids}"
+                f"{bcolors.ENDC}"
             )
 
-    # measure accuracy
+    # calculate metrics
     accuracy = tp / (tp + fn + 1e-8)
-    rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
-    print(f"{rescolor}\nAccuracy: {accuracy:.3f} ({accuracy*100:.2f})% ({tp}/{total}){bcolors.ENDC}")
-    return accuracy
+    precision = tp / (tp + fp + 1e-8)
+    recall = tp / (tp + fn + 1e-8)
+    f1 = 2 * (precision * recall) / (precision + recall)
+
+    if display:
+        rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
+        print("\n========-EVAL METRICS-=========")
+        print(f"{rescolor}", end="")
+        print(f"Accuracy:  {accuracy:.3f}   ({tp}/{total}) {bcolors.ENDC}")
+        if all_metrics:
+            print(f"Precision: {precision:.3f}")
+            print(f"Recall:    {recall:.3f}")
+            print(f"F1 Score:  {f1:.3f}")
+        print("==============================\n")
+
+    return accuracy, precision, recall, f1
 
 
 def log_evaluation(data_folder, accuracy, metrics, input_file, batch_size, gpu):
@@ -145,10 +161,10 @@ def main():
 
 
     # ------- Run measurements -------
-    accuracy = measure_accuracy(pred_spans=all_spans, truths=truths, verbose=args.verbose)
+    measure_accuracy(pred_spans=all_spans, truths=truths, verbose=args.verbose)
 
     # ------- Run ReFinED evaluation -------
-    metrics = evaluate_refined(refined_model, args.input_file)
+    evaluate_refined(refined_model, args.input_file)
 
 
 

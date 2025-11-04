@@ -1,6 +1,6 @@
 from refined.dataset_reading.entity_linking.dataset_factory import Datasets
 from my_tests.utility.test_utils import load_model
-from my_tests.accuracy import evaluate_refined
+from my_tests.accuracy import evaluate_refined, measure_accuracy
 from refined.data_types.doc_types import Doc
 from refined.data_types.base_types import Entity, Span
 from typing import Iterable
@@ -15,6 +15,7 @@ from typing import Iterable
 #TODO: Bruk dette for refined-evaluering av HTR data !!!
 #TODO: sett inn under "dataset_factory.py" under andre docs
 
+# hardtable docs testing                 
 class Test:
     def __init__(self):
         self.preprocessor = None
@@ -90,7 +91,37 @@ class Test:
             #     docs.append(doc)
 
             # return doc
-                        
-t = Test()
-t.get_hardtable_docs("HTR1")
-        
+
+# t = Test()
+# t.get_hardtable_docs("HTR1")
+
+
+
+# measure accuracy testing
+pred_spans = [
+    [Span(text="Cell1", start=0, ln=5, predicted_entity=Entity(wikidata_entity_id="Q1"))],   # correct
+    [Span(text="Cell2", start=6, ln=5, predicted_entity=Entity(wikidata_entity_id="Q3"))],   # wrong
+    [],  # no prediction
+    [Span(text="Cell4", start=12, ln=5, predicted_entity=Entity(wikidata_entity_id="Q4"))],  # correct
+    [Span(text="Cell5", start=18, ln=5, predicted_entity=Entity(wikidata_entity_id="Q0"))],  # no prediction
+    [Span(text="Cell6", start=24, ln=5, predicted_entity=Entity(wikidata_entity_id="Q6"))],  # correct
+    [Span(text="Cell7", start=30, ln=5, predicted_entity=Entity(wikidata_entity_id="Q7"))],  # correct
+    [],  # no prediction
+    [Span(text="Cell9", start=36, ln=5, predicted_entity=Entity(wikidata_entity_id="Q9"))],  # correct
+    [Span(text="Cell10", start=42, ln=5, predicted_entity=Entity(wikidata_entity_id="Q10"))],# correct
+]
+
+truths = [
+    (0, 0, ["Q1"]),
+    (0, 1, ["Q2"]),
+    (0, 2, ["Q3"]),
+    (0, 3, ["Q4"]),
+    (0, 4, ["Q5"]),
+    (0, 5, ["Q6"]),
+    (0, 6, ["Q7"]),
+    (0, 7, ["Q8"]),
+    (0, 8, ["Q9"]),
+    (0, 9, ["Q10"]),
+]
+
+accuracy = measure_accuracy(pred_spans=pred_spans, truths=truths, all_metrics=True, verbose=True)
