@@ -1,6 +1,5 @@
 import json
 from typing import Iterable
-import os
 import pandas as pd
 
 from refined.data_types.doc_types import Doc
@@ -462,3 +461,4 @@ class Datasets:
             docs.append(doc)
 
         return docs
+    

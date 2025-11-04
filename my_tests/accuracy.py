@@ -64,15 +64,18 @@ def log_evaluation(DATA_FOLDER, accuracy, metrics, input_file, batch_size, gpu):
         f.write("\n")
 
 
-def evaluate_refined(refined, input_file, LINE_LIMIT):
+def evaluate_refined(refined, input_file):
     print(bolden("\n=== Running ReFinED Evaluation ==="))
     datasets = get_datasets_obj(preprocessor=refined.preprocessor)
 
     if "companies" in input_file.lower():
-        eval_docs = list(datasets.get_companies_docs(split="test", include_gold_label=True))[:LINE_LIMIT]
+        eval_docs = list(datasets.get_companies_docs(split="test", include_gold_label=True))
 
     elif "movies" in input_file.lower():
-        eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))[:LINE_LIMIT]
+        eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))
+
+    elif "HTR" in input_file.lower():
+        eval_docs = list(datasets.get_hardtable_docs(split=input_file, include_gold_label=True))
 
     else: raise ValueError(f"Unknown dataset type in input file name: {input_file}")
 
@@ -80,8 +83,8 @@ def evaluate_refined(refined, input_file, LINE_LIMIT):
     final_metrics = evaluate(
         refined=refined,
         evaluation_dataset_name_to_docs={"EVAL": eval_docs},
-        el=False,
-        ed=True
+        el=True,    # entity linking eval
+        ed=True     # entity disambiguation (optional)
     )
 
     # print results
@@ -139,10 +142,9 @@ def main():
 
     # ------- Run measurements -------
     accuracy = measure_accuracy(pred_spans=all_spans, truths=truths, verbose=verbose)
-    # accuracy = measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
 
     # ------- Run official evaluation -------
-    metrics = evaluate_refined(refined_model, input_file, LINE_LIMIT)
+    metrics = evaluate_refined(refined_model, input_file)
 
 
 

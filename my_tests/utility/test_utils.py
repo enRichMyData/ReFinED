@@ -45,10 +45,10 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
     # model = "fine_tuned_models/movies_full/f1_0.9237" # fine tuned med 100% av treningsdata fra companies.csv
     # model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
 
-    print(green_info(f"[INFO] Loading ReFinED model: "
-                     + bcolors.OKCYAN +f"'{model}'" + bcolors.ENDC +"'"
-                     + green_info(", entity set: ")
-                     + bcolors.OKCYAN +f"'{entity_set}'"))
+    print(green_info(f"[INFO] Loading ReFinED model: ") 
+          + cyan_info(f"'{model}'") 
+          + green_info(", entity set: ") 
+          + cyan_info(f"'{entity_set}'"))
 
 
     # GPU/CPU selection
