@@ -117,15 +117,6 @@ def evaluate_refined(refined, input_file):
         print_errors=False
     )
 
-    # print results
-    # print(bolden("\n=== Final Evaluation Results ==="))
-    # for dataset_name, metrics in final_metrics.items():
-    #     print(f"\nDataset: {dataset_name}")
-    #     print(f"  F1 Score:  {metrics.get_f1():.4f}")
-    #     print(f"  Accuracy:  {metrics.get_accuracy():.4f}")
-    #     print(f"  Precision: {metrics.get_precision():.4f}")
-    #     print(f"  Recall:    {metrics.get_recall():.4f}")
-
     return final_metrics
 
 
