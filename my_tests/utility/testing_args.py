@@ -1,6 +1,17 @@
 import argparse
 
 
+
+MODEL_CHOICES = {
+    "wikipedia_model_with_numbers": "wikipedia_model_with_numbers",
+    "wikipedia_model": "wikipedia_model",
+    "merged_10k": "fine_tuned_models/merged_10k/f1_0.9229",
+    "merged_60k": "fine_tuned_models/merged_60k/f1_0.9254",
+    "companies_full": "fine_tuned_models/companies_full/f1_0.8711",
+    "movies_full": "fine_tuned_models/movies_full/f1_0.9237",
+    "merged_full": "fine_tuned_models/merged_full/f1_0.8972"
+}
+
 def parse_args(supported_files=None):
     """
     Parses command line arguments for input CSV and optional --verbose.
@@ -49,6 +60,22 @@ def parse_args(supported_files=None):
         action="store_false",
         dest="batch",
         help="Disable batching (default is batching enabled)"
+    )
+    parser.add_argument(
+        "--entity_set", "-es",
+        type=str.lower,
+        dest="entity_set",
+        choices=["wikidata", "wikipedia"],
+        default="wikidata",
+        help="Entity set to use (wikidata or wikipedia"
+    )
+    parser.add_argument(
+        "--model", "-m",
+        type=str,
+        dest="model",
+        choices=list(MODEL_CHOICES.keys()),
+        default="wikipedia_model_with_numbers",
+        help="Model to use (shrot alias, maps to full path internally)"
     )
 
     args = parser.parse_args()

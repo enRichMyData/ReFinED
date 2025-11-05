@@ -20,6 +20,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
     tp = 0
     fn = 0
     fp = 0
+    # true negative is meaningless in EL
 
     # compare predicted and ground truth in pairs (pred, gold)
     for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
@@ -28,25 +29,26 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
 
         # only consider first entity, i.e. company/movie
         pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
-    
+
         # true positive and false negative
         if pred_qid in truth_qids:
             tp += 1
         else:
             fn += 1
-        
+
         # false positives
         if pred_qid is not None and pred_qid not in truth_qids:
             fp += 1
 
         if verbose:
             print(
-                f"{bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
                 f"[{i}{']':<3} "
-                f"Pred: {pred_qid or 'None':<6}"
-                f"\tTruth: {str(truth_qids):<10}"
-                f"\tMatch: {pred_qid in truth_qids}"
+                f"Pred: {pred_qid or 'None':<10}"
+                f"\tTruth: {str(truth_qids):<13}"
+                f"{bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
+                f"\tMatch: {str(pred_qid in truth_qids):<8}"
                 f"{bcolors.ENDC}"
+                f"({pred_qid})"
             )
 
     # calculate metrics
@@ -59,11 +61,11 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
         rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
         print("\n========-EVAL METRICS-=========")
         print(f"{rescolor}", end="")
-        print(f"Accuracy:  {accuracy:.3f}   ({tp}/{total}) {bcolors.ENDC}")
+        print(f"Accuracy:  {accuracy:.4f}   {accuracy*100:.2f}   ({tp}/{total}) {bcolors.ENDC}")
         if all_metrics:
-            print(f"Precision: {precision:.3f}")
-            print(f"Recall:    {recall:.3f}")
-            print(f"F1 Score:  {f1:.3f}")
+            print(f"Precision: {precision:.4f}")
+            print(f"Recall:    {recall:.4f}")
+            print(f"F1 Score:  {f1:.4f}")
         print("==============================\n")
 
     return accuracy, precision, recall, f1
@@ -99,27 +101,30 @@ def evaluate_refined(refined, input_file):
     elif "movies" in input_file.lower():
         eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))
 
-    elif "HTR" in input_file.lower():
+    elif "HTR" in input_file.upper():
         eval_docs = list(datasets.get_hardtable_docs(split=input_file, include_gold_label=True))
 
-    else: raise ValueError(f"Unknown dataset type in input file name: {input_file}")
+    else:
+        raise NotImplementedError(f"docs not created for {input_file}")
+
 
     # built-in revaluation by refined
     final_metrics = evaluate(
         refined=refined,
         evaluation_dataset_name_to_docs={"EVAL": eval_docs},
         el=True,    # entity linking eval
-        ed=True     # entity disambiguation (optional)
+        ed=False,    # entity disambiguation (optional)
+        print_errors=False
     )
 
     # print results
-    print(bolden("\n=== Final Evaluation Results ==="))
-    for dataset_name, metrics in final_metrics.items():
-        print(f"\nDataset: {dataset_name}")
-        print(f"  Precision: {metrics.get_precision():.3f}")
-        print(f"  Recall:    {metrics.get_recall():.3f}")
-        print(f"  F1 Score:  {metrics.get_f1():.3f}")
-        print(f"  Accuracy:  {metrics.get_accuracy():.3f}")
+    # print(bolden("\n=== Final Evaluation Results ==="))
+    # for dataset_name, metrics in final_metrics.items():
+    #     print(f"\nDataset: {dataset_name}")
+    #     print(f"  F1 Score:  {metrics.get_f1():.4f}")
+    #     print(f"  Accuracy:  {metrics.get_accuracy():.4f}")
+    #     print(f"  Precision: {metrics.get_precision():.4f}")
+    #     print(f"  Recall:    {metrics.get_recall():.4f}")
 
     return final_metrics
 
@@ -144,8 +149,7 @@ def main():
 
 
     # ------- Load model -------
-    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
-    refined_model = load_model(device=args.device, model=model)
+    refined_model = load_model(device=args.device, entity_set=args.entity_set, model=args.model)
 
 
     # ------- Run inference -------
@@ -159,9 +163,8 @@ def main():
     print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
 
 
-
     # ------- Run measurements -------
-    measure_accuracy(pred_spans=all_spans, truths=truths, verbose=args.verbose)
+    measure_accuracy(pred_spans=all_spans, truths=truths, all_metrics=True, verbose=args.verbose)
 
     # ------- Run ReFinED evaluation -------
     evaluate_refined(refined_model, args.input_file)
@@ -176,7 +179,7 @@ def main():
         print("Running on CPU\n")
 
     print(f"Results from file: {args.input_file}")
-    print(f"Truth-values retrieved using {args.gt_format}")
+    print(f"Truth-values retrieved using {args.format}")
 
     # logging results to file
     # log_evaluation(TEST_DIR, accuracy, metrics, input_file, batch_size, torch.cuda.get_device_name(0))
