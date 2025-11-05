@@ -8,50 +8,74 @@ from my_tests.utility.test_utils import (
 from refined.evaluation.evaluation import get_datasets_obj, evaluate    # built-in eval
 from my_tests.utility.testing_args import parse_args                    # CLI
 from utility.process_files import load_input_file                       # input-handling
+from my_tests.utility.test_utils import bcolors
 import time
 import torch
 import datetime
 import os
 
 
-# color codes
-colorOK = bcolors.OKCYAN
-colorFAIL = bcolors.FAIL
+def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbose=False):
+    total = 0
+    tp = 0
+    fn = 0
+    fp = 0
+    # true negative is meaningless in EL
 
-
-def measure_accuracy(pred_spans, truths, verbose=False):
-    total = min(len(pred_spans), len(truths))
-    correct = 0
-
-    # compare predicted and ground truth in pairs (pred, gt)
+    # compare predicted and ground truth in pairs (pred, gold)
     for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
-        if not pred_span or not truth_qids: continue
+        if not truth_qids: continue
+        total += 1
 
-        # only consider first entity, aka company/movie
-        primary_span = pred_span[0] if pred_span else None
-        pred_qid = getattr(primary_span.predicted_entity, "wikidata_entity_id", None) if pred_span else None
+        # only consider first entity, i.e. company/movie
+        pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
 
+        # true positive and false negative
         if pred_qid in truth_qids:
-            correct += 1
+            tp += 1
+        else:
+            fn += 1
+
+        # false positives
+        if pred_qid is not None and pred_qid not in truth_qids:
+            fp += 1
 
         if verbose:
             print(
-                f"[{i}] Pred: {pred_qid or 'None':<10} "
-                f"Truth: {truth_qids} "
-                f"Match: {colorOK if pred_qid in truth_qids else colorFAIL}"
+                f"[{i}{']':<3} "
+                f"Pred: {pred_qid or 'None':<10}"
+                f"\tTruth: {str(truth_qids):<13}"
+                f"{bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
+                f"\tMatch: {str(pred_qid in truth_qids):<8}"
+                f"{bcolors.ENDC}"
+                f"({pred_qid})"
             )
 
-    # measure accuracy
-    accuracy = (correct / total * 100) if total else 0
-    print(f"\nAccuracy: {accuracy:.2f}% ({correct}/{total})")
-    return accuracy
+    # calculate metrics
+    accuracy = tp / (total + 1e-8)
+    precision = tp / (tp + fp + 1e-8)
+    recall = tp / (tp + fn + 1e-8)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
+
+    if display:
+        rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
+        print("\n========-EVAL METRICS-=========")
+        print(f"{rescolor}", end="")
+        print(f"Accuracy:  {accuracy:.4f}   {accuracy*100:.2f}   ({tp}/{total}) {bcolors.ENDC}")
+        if all_metrics:
+            print(f"Precision: {precision:.4f}")
+            print(f"Recall:    {recall:.4f}")
+            print(f"F1 Score:  {f1:.4f}")
+        print("==============================\n")
+
+    return accuracy, precision, recall, f1
 
 
-def log_evaluation(DATA_FOLDER, accuracy, metrics, input_file, batch_size, gpu):
+def log_evaluation(data_folder, accuracy, metrics, input_file, batch_size, gpu):
     """saves result to file"""
 
     # Define default log directory
-    log_dir = os.path.join(DATA_FOLDER, "logs")
+    log_dir = os.path.join(data_folder, "logs")
     os.makedirs(log_dir, exist_ok=True)
 
     log_path = os.path.join(log_dir, f"evaluation_log_{input_file}_{batch_size}_{gpu}.txt")
@@ -67,34 +91,40 @@ def log_evaluation(DATA_FOLDER, accuracy, metrics, input_file, batch_size, gpu):
         f.write("\n")
 
 
-def evaluate_refined(refined, input_file, LINE_LIMIT):
+def evaluate_refined(refined, input_file):
     print(bolden("\n=== Running ReFinED Evaluation ==="))
     datasets = get_datasets_obj(preprocessor=refined.preprocessor)
 
     if "companies" in input_file.lower():
-        eval_docs = list(datasets.get_companies_docs(split="test", include_gold_label=True))[:LINE_LIMIT]
+        eval_docs = list(datasets.get_companies_docs(split="test", include_gold_label=True))
 
     elif "movies" in input_file.lower():
-        eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))[:LINE_LIMIT]
+        eval_docs = list(datasets.get_movie_docs(split="test", include_gold_label=True))
 
-    else: raise ValueError(f"Unknown dataset type in input file name: {input_file}")
+    elif "HTR" in input_file.upper():
+        eval_docs = list(datasets.get_hardtable_docs(split=input_file, include_gold_label=True))
+
+    else:
+        raise NotImplementedError(f"docs not created for {input_file}")
+
 
     # built-in revaluation by refined
     final_metrics = evaluate(
         refined=refined,
         evaluation_dataset_name_to_docs={"EVAL": eval_docs},
-        el=False,
-        ed=True
+        el=True,    # entity linking eval
+        ed=False,    # entity disambiguation (optional)
+        print_errors=False
     )
 
     # print results
-    print(bolden("\n=== Final Evaluation Results ==="))
-    for dataset_name, metrics in final_metrics.items():
-        print(f"\nDataset: {dataset_name}")
-        print(f"  Precision: {metrics.get_precision():.3f}")
-        print(f"  Recall:    {metrics.get_recall():.3f}")
-        print(f"  F1 Score:  {metrics.get_f1():.3f}")
-        print(f"  Accuracy:  {metrics.get_accuracy():.3f}")
+    # print(bolden("\n=== Final Evaluation Results ==="))
+    # for dataset_name, metrics in final_metrics.items():
+    #     print(f"\nDataset: {dataset_name}")
+    #     print(f"  F1 Score:  {metrics.get_f1():.4f}")
+    #     print(f"  Accuracy:  {metrics.get_accuracy():.4f}")
+    #     print(f"  Precision: {metrics.get_precision():.4f}")
+    #     print(f"  Recall:    {metrics.get_recall():.4f}")
 
     return final_metrics
 
@@ -108,30 +138,24 @@ def main():
 
     # ------- Command-line parsing -------
     args = parse_args()
-    input_file = args.input_file
-    verbose = args.verbose
-    batch_size = args.batch_size
-    device = args.device
-    gt_format = args.format
-    batch = args.batch
+
 
     # ------- Load CSV and truths -------
-    texts, truths = load_input_file(input_file, DEFAULT_DATA_FOLDER, gt_format)
+    texts, truths = load_input_file(args.input_file, DEFAULT_DATA_FOLDER, args.format)
 
-
-    # ------- Load model -------
-    model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
-    refined_model = load_model(device=device, model=model)
-
-    # Retrieve texts from running ReFinED entity3. linker
+    # shorten input - for testing
     texts = texts[:LINE_LIMIT]
     truths = truths[:LINE_LIMIT]
 
 
+    # ------- Load model -------
+    refined_model = load_model(device=args.device, entity_set=args.entity_set, model=args.model)
+
+
     # ------- Run inference -------
     start_time = time.time()
-    if batch:
-        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=batch_size)
+    if args.batch:
+        all_spans = run_refined_batch(texts=texts, model=refined_model, batch_size=args.batch_size)
     else:
         all_spans = run_refined_single(texts=texts, model=refined_model)
     duration = time.time() - start_time
@@ -139,25 +163,23 @@ def main():
     print(f"\nInference time for {len(texts)} texts: {duration:.2f} seconds")
 
 
-
     # ------- Run measurements -------
-    accuracy = measure_accuracy(pred_spans=all_spans, truths=truths, verbose=verbose)
-    # accuracy = measure_accuracy(all_spans, truths, LINE_LIMIT, verbose=verbose)
+    measure_accuracy(pred_spans=all_spans, truths=truths, all_metrics=True, verbose=args.verbose)
 
-    # ------- Run official evaluation -------
-    metrics = evaluate_refined(refined_model, input_file, LINE_LIMIT)
+    # ------- Run ReFinED evaluation -------
+    evaluate_refined(refined_model, args.input_file)
 
 
 
     # ------- CPU SWITCH ------- #
     print("\nCUDA available?", torch.cuda.is_available())
-    if torch.cuda.is_available() and device == "gpu":
+    if torch.cuda.is_available() and args.device == "gpu":
         print("Running on GPU:", torch.cuda.get_device_name(0) + "\n")
     else:
         print("Running on CPU\n")
 
-    print(f"Results from file: {input_file}")
-    print(f"Truth-values retrieved using {gt_format}")
+    print(f"Results from file: {args.input_file}")
+    print(f"Truth-values retrieved using {args.format}")
 
     # logging results to file
     # log_evaluation(TEST_DIR, accuracy, metrics, input_file, batch_size, torch.cuda.get_device_name(0))
