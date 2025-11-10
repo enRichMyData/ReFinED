@@ -14,7 +14,6 @@ import torch
 import datetime
 import os
 
-
 def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbose=False):
     total = 0
     tp = 0
@@ -27,6 +26,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
         if not truth_qids: continue
         total += 1
 
+        #TODO This assumes only one (main) entity per text!
         # only consider first entity, i.e. company/movie
         pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
 
@@ -66,6 +66,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
             print(f"Precision: {precision:.4f}")
             print(f"Recall:    {recall:.4f}")
             print(f"F1 Score:  {f1:.4f}")
+            # print(f"Gold vals: {len(truths)}")
         print("==============================\n")
 
     return accuracy, precision, recall, f1
@@ -112,7 +113,7 @@ def evaluate_refined(refined, input_file):
     final_metrics = evaluate(
         refined=refined,
         evaluation_dataset_name_to_docs={"EVAL": eval_docs},
-        el=True,    # entity linking eval
+        el=True,     # entity linking eval
         ed=False,    # entity disambiguation (optional)
         print_errors=False
     )
