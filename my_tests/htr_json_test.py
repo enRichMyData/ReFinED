@@ -24,12 +24,12 @@ model = "wikipedia_model_with_numbers"
 def eval_el_challenge(
         model: str,
         eval_set: str = "HTR1",
-        entity_set: str = "wikidata",
         batch_size: int = 512,
         prediction_mode: str = "cell",
         all_metrics: bool = True,
         verbose: bool = True
 ):
+    # path to data and truth labels
     tables_folder = f"my_tests/data/EL_challenge/{eval_set}/tables"
     cell_to_qid_file = f"my_tests/data/EL_challenge/{eval_set}/cell_to_qid.json"
 
@@ -100,7 +100,6 @@ if __name__ == "__main__":
     all_spans, truths, duration = eval_el_challenge(
         model=refined_model,
         eval_set="HTR1",
-        entity_set=entity_set,
         batch_size=512,
         prediction_mode="cell"
     )
