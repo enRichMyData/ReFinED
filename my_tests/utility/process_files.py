@@ -52,7 +52,7 @@ def extract_truths_csv(folder: str, default_data: str):
 
     # extracts QID from entity links (https...entity/QID) -> (id, col, [qid])
     truths = [
-        (row.idRow, row.idCol, [row.entity.split("/")[-1]] if pd.notna(row.entity) else [])
+        [row.entity.split("/")[-1]] if pd.notna(row.entity) else []
         for _, row in df.iterrows()
     ]
 
@@ -73,7 +73,7 @@ def extract_truths_json(folder: str, default_data: str):
     print(green_info(f"[INFO] Loaded {len(data)} entries from {path}"))
 
     # Build a list of (row, col, qids) for each qid in json -> (rowId, rowCol[qid1, qid2, ...])
-    return [(i, 0, qids if qids else []) for i, (title, qids) in enumerate(data.items())]
+    return [qids if qids else [] for title, qids in data.items()]
 
 
 # [2]

@@ -63,18 +63,14 @@ def eval_el_challenge(
                 # row-level prediction (context)
                 elif prediction_mode == "row":
                     cell_text = str(df.iat[row_idx, col_idx])
-                    # include context
-                    context_cells = [
-                        str(df.iat[row_idx, c]) for c in range(df.shape[1]) if c != col_idx
-                    ]
-                    context_text = ",".join(context_cells)
-                    text = f"{cell_text},{context_text}"
+                    context_cells = [str(df.iat[row_idx, c]) for c in range(df.shape[1]) if c != col_idx]
+                    text = f"{cell_text},{','.join(context_cells)}"
 
             except IndexError:
                 continue
 
             texts.append(text)                          # LEDA 1245565, 0.08102   <-- (col0, col1) 00X7C4X7.csv
-            truths.append((row_idx, col_idx, [qid]))    #
+            truths.append([qid])   
 
 
     # ---- RUN MODEL INFERENCE (batch for speed) ----
@@ -91,11 +87,9 @@ def eval_el_challenge(
 
 if __name__ == "__main__":
 
-    device = "gpu"
-    entity_set = "wikidata"
     model = "wikipedia_model_with_numbers"
 
-    refined_model = load_model(device=device, entity_set=entity_set, model=model)
+    refined_model = load_model(device="gpu", entity_set="wikidata", model=model)
 
     all_spans, truths, duration = eval_el_challenge(
         model=refined_model,
