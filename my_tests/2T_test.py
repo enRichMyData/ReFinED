@@ -60,6 +60,14 @@ def eval_2T(
                 texts.append(text)
                 truths.append([main_qid])
 
+        print(table_name)
+        print("\nTEXTS")
+        print(*texts[:10], sep="\n")
+        print("\nTRUTHS")
+        print(*truths[:10], sep="\n")
+        print("\n")
+        break
+
     print("\nTEXTS")
     print(*texts[:10], sep="\n")
     print("\nTRUTHS")

@@ -95,5 +95,5 @@ if __name__ == "__main__":
         model=refined_model,
         eval_set="HTR1",
         batch_size=512,
-        prediction_mode="cell"
+        prediction_mode="row"
     )

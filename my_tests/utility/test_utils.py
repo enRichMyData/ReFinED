@@ -58,7 +58,7 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
         warnings.filterwarnings("ignore", message="In CPU autocast, but the target dtype is not supported.*")
         original_autocast = torch.amp.autocast
         torch.amp.autocast = lambda *args, **kwargs: original_autocast(device_type="cpu", dtype=torch.float32)
-    print(model)
+
     # ReFinED: Loading model
     return Refined.from_pretrained(
         model_name=model,
