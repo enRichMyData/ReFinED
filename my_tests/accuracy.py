@@ -38,7 +38,7 @@ def measure_accuracy(pred_spans, truths, display=True, verbose=False):
 
         # false positives
         if pred_qid is not None and pred_qid not in truth_qids:
-            fp += 1        
+            fp += 1
 
         if verbose:
             truth_display = str(truth_qids)

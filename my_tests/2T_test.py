@@ -40,6 +40,8 @@ def eval_2T(
     # pre-built mapping: table_name -> rows DataFrame
     table_to_truths = {table: df for table, df in eval_df.groupby("table")}
 
+    s1 = time.perf_counter()
+
     # collect texts and truths
     texts, truths = [], []
     for table_file in glob.glob(f"{tables_folder}/*.csv"):
@@ -75,25 +77,28 @@ def eval_2T(
             texts.append(text)
             truths.append(qids)
 
+    print(f"DEBUG: Prepared {len(texts)} texts and truths in {time.perf_counter() - s1:.4f}s")
+
     #TODO: DELETE
     # START DEBUG    (sample of 1000 random)
     import random
+    s2 = time.perf_counter()
+    random.seed(42)
     combined = list(zip(texts, truths))
     random.shuffle(combined)
-    combined = combined[:100]
-    texts, truths = zip(*combined)
-    texts = list(texts)
-    truths = list(truths)
+    combined = combined[:100000]
+    texts, truths = map(list, zip(*combined))
+    print(f"DEBUG: sampled 500 entries in {time.perf_counter() - s2:.4f}s")
     # END DEBUG
 
     # ---- RUN MODEL INFERENCE (batch for speed) ----
     print(f"Running inference on {len(texts)} cells...")
-    start = time.time()
+    start = time.perf_counter()
     all_spans = run_refined_batch(texts, model, batch_size)
-    duration = time.time() - start
+    duration = time.perf_counter() - start
 
     measure_accuracy(all_spans, truths, verbose=verbose)
-    print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds")
+    print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds (batch {batch_size})")
 
     return all_spans, truths, duration
 
@@ -107,6 +112,10 @@ if __name__ == "__main__":
     all_spans, truths, duration = eval_2T(
         model=refined_model,
         eval_set="2T_Round4",
-        batch_size=512,
+        batch_size=64,
         prediction_mode="cell"
     )
+
+    # TLDR:
+    # - big batch = SLOWER
+    # - 100k lines on 64 ~ 220s (3.3 min)
