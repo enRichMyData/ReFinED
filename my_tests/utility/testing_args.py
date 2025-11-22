@@ -79,4 +79,5 @@ def parse_args(supported_files=None):
     )
 
     args = parser.parse_args()
+    args.model = MODEL_CHOICES[args.model]
     return args

@@ -14,20 +14,20 @@ import torch
 import datetime
 import os
 
-
 def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbose=False):
     total = 0
     tp = 0
     fn = 0
     fp = 0
-    # true negative is meaningless in EL
+    # tn is meaningless in EL
 
     # compare predicted and ground truth in pairs (pred, gold)
-    for i, (pred_span, (row, col, truth_qids)) in enumerate(zip(pred_spans, truths)):
+    for i, (pred_span, truth_qids) in enumerate(zip(pred_spans, truths)):
         if not truth_qids: continue
         total += 1
 
-        # only consider first entity, i.e. company/movie
+        #TODO This assumes only one (main) entity per text!
+        # only consider the _first_ entity, i.e. company/movie
         pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
 
         # true positive and false negative
@@ -38,7 +38,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
 
         # false positives
         if pred_qid is not None and pred_qid not in truth_qids:
-            fp += 1
+            fp += 1        
 
         if verbose:
             print(
@@ -50,6 +50,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
                 f"{bcolors.ENDC}"
                 f"({pred_qid})"
             )
+
 
     # calculate metrics
     accuracy = tp / (total + 1e-8)
@@ -66,6 +67,7 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
             print(f"Precision: {precision:.4f}")
             print(f"Recall:    {recall:.4f}")
             print(f"F1 Score:  {f1:.4f}")
+            # print(f"Gold vals: {len(truths)}")
         print("==============================\n")
 
     return accuracy, precision, recall, f1
@@ -112,7 +114,7 @@ def evaluate_refined(refined, input_file):
     final_metrics = evaluate(
         refined=refined,
         evaluation_dataset_name_to_docs={"EVAL": eval_docs},
-        el=True,    # entity linking eval
+        el=True,     # entity linking eval
         ed=False,    # entity disambiguation (optional)
         print_errors=False
     )
