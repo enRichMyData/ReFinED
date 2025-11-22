@@ -26,7 +26,6 @@ def eval_htr(
         eval_set: str = "HTR1",
         batch_size: int = 512,
         prediction_mode: str = "cell",
-        all_metrics: bool = True,
         verbose: bool = True
 ):
     tables_folder = f"my_tests/data/EL_challenge/{eval_set}/tables"
@@ -78,7 +77,7 @@ def eval_htr(
     all_spans = run_refined_batch(texts, model, batch_size)
     duration = time.time() - start
 
-    measure_accuracy(all_spans, truths, all_metrics=all_metrics, verbose=verbose)
+    measure_accuracy(all_spans, truths, verbose=verbose)
     print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds")
 
     return all_spans, truths, duration

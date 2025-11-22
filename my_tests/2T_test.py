@@ -25,7 +25,6 @@ def eval_2T(
         eval_set: str = "2T_Round4",
         batch_size: int = 512,
         prediction_mode: str = "cell",
-        all_metrics: bool = True,
         verbose: bool = True
 ):
     # path to data and truth labels
@@ -76,13 +75,24 @@ def eval_2T(
             texts.append(text)
             truths.append(qids)
 
+    #TODO: DELETE
+    # START DEBUG    (sample of 1000 random)
+    import random
+    combined = list(zip(texts, truths))
+    random.shuffle(combined)
+    combined = combined[:100]
+    texts, truths = zip(*combined)
+    texts = list(texts)
+    truths = list(truths)
+    # END DEBUG
+
     # ---- RUN MODEL INFERENCE (batch for speed) ----
     print(f"Running inference on {len(texts)} cells...")
     start = time.time()
     all_spans = run_refined_batch(texts, model, batch_size)
     duration = time.time() - start
 
-    measure_accuracy(all_spans, truths, all_metrics=all_metrics, verbose=verbose)
+    measure_accuracy(all_spans, truths, verbose=verbose)
     print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds")
 
     return all_spans, truths, duration

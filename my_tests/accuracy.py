@@ -14,7 +14,7 @@ import torch
 import datetime
 import os
 
-def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbose=False):
+def measure_accuracy(pred_spans, truths, display=True, verbose=False):
     total = 0
     tp = 0
     fn = 0
@@ -41,13 +41,17 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
             fp += 1        
 
         if verbose:
+            truth_display = str(truth_qids)
+            if len(truth_display) > 30:
+                truth_display = truth_display[:27] + "...]"
+            match_color = bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL
             print(
-                f"[{i}{']':<3} "
-                f"Pred: {pred_qid or 'None':<10}"
-                f"\tTruth: {str(truth_qids):<13}"
-                f"{bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL}"
-                f"\tMatch: {str(pred_qid in truth_qids):<8}"
-                f"{bcolors.ENDC}"
+                f"[{i+1:>3}] "
+                f"Pred: {pred_qid or 'None':<12} "
+                f"Truth: {truth_display:<35} "
+                f"{match_color}"
+                f"Match: {str(pred_qid in truth_qids):<5}"
+                f"{bcolors.ENDC} "
                 f"({pred_qid})"
             )
 
@@ -63,11 +67,10 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
         print("\n========-EVAL METRICS-=========")
         print(f"{rescolor}", end="")
         print(f"Accuracy:  {accuracy:.4f}   {accuracy*100:.2f}   ({tp}/{total}) {bcolors.ENDC}")
-        if all_metrics:
-            print(f"Precision: {precision:.4f}")
-            print(f"Recall:    {recall:.4f}")
-            print(f"F1 Score:  {f1:.4f}")
-            # print(f"Gold vals: {len(truths)}")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall:    {recall:.4f}")
+        print(f"F1 Score:  {f1:.4f}")
+        # print(f"No. Gold:  {len(truths)}")
         print("==============================\n")
 
     return accuracy, precision, recall, f1
@@ -157,7 +160,7 @@ def main():
 
 
     # ------- Run measurements -------
-    measure_accuracy(pred_spans=all_spans, truths=truths, all_metrics=True, verbose=args.verbose)
+    measure_accuracy(pred_spans=all_spans, truths=truths, verbose=args.verbose)
 
     # ------- Run ReFinED evaluation -------
     evaluate_refined(refined_model, args.input_file)
