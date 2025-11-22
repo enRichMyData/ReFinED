@@ -40,27 +40,6 @@ def measure_accuracy(pred_spans, truths, display=True, all_metrics=False, verbos
         if pred_qid is not None and pred_qid not in truth_qids:
             fp += 1        
 
-
-        # # true positive: any predicted QID that is in truth_qids
-        # tp += sum(1 for pq in pred_qids if pq in truth_qids)
-
-        # # false negative: gold QIDs not predicted
-        # fn += sum(1 for tq in truth_qids if tq not in pred_qids)
-
-        # # false positives: predicted QIDs not in truth
-        # fp += sum(1 for pq in pred_qids if pq not in truth_qids)
-
-        # if verbose:
-        #     print(
-        #         f"[{i:<2}]: "
-        #         f"\tPred: {str(pred_qids) if pred_qids else 'None':<15}"
-        #         f"\tTruth: {str(truth_qids):<15}"
-        #         f"{bcolors.OKCYAN if any(pq in truth_qids for pq in pred_qids) else bcolors.FAIL}"
-        #         f"\tMatch: {str(any(pq in truth_qids for pq in pred_qids)):<8}"
-        #         f"{bcolors.ENDC}"
-        #         f"({pred_qids})"
-        #     )
-
         if verbose:
             print(
                 f"[{i}{']':<3} "
