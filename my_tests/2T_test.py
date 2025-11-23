@@ -20,7 +20,7 @@ model = "wikipedia_model_with_numbers"
 # - "row" = row-level prediction (uses row as context)
 
 
-def eval_2T(
+def eval_2t(
         model: str,
         eval_set: str = "2T_Round4",
         batch_size: int = 512,
@@ -86,7 +86,7 @@ def eval_2T(
     random.seed(42)
     combined = list(zip(texts, truths))
     random.shuffle(combined)
-    combined = combined[:100000]
+    combined = combined[:10000]
     texts, truths = map(list, zip(*combined))
     print(f"DEBUG: sampled 500 entries in {time.perf_counter() - s2:.4f}s")
     # END DEBUG
@@ -99,8 +99,7 @@ def eval_2T(
 
     measure_accuracy(all_spans, truths, verbose=verbose)
     print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds (batch {batch_size})")
-
-    return all_spans, truths, duration
+    # ============================================
 
 
 if __name__ == "__main__":
@@ -109,7 +108,7 @@ if __name__ == "__main__":
 
     refined_model = load_model(device="gpu", entity_set="wikidata", model=model)
 
-    all_spans, truths, duration = eval_2T(
+    eval_2t(
         model=refined_model,
         eval_set="2T_Round4",
         batch_size=64,

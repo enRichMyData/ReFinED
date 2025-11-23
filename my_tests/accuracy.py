@@ -14,7 +14,7 @@ import torch
 import datetime
 import os
 
-def measure_accuracy(pred_spans, truths, display=True, verbose=False):
+def measure_accuracy(pred_spans, truths, verbose=False):
     total = 0
     tp = 0
     fn = 0
@@ -62,16 +62,15 @@ def measure_accuracy(pred_spans, truths, display=True, verbose=False):
     recall = tp / (tp + fn + 1e-8)
     f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
 
-    if display:
-        rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
-        print("\n========-EVAL METRICS-=========")
-        print(f"{rescolor}", end="")
-        print(f"Accuracy:  {accuracy:.4f}   {accuracy*100:.2f}   ({tp}/{total}) {bcolors.ENDC}")
-        print(f"Precision: {precision:.4f}")
-        print(f"Recall:    {recall:.4f}")
-        print(f"F1 Score:  {f1:.4f}")
-        # print(f"No. Gold:  {len(truths)}")
-        print("==============================\n")
+    rescolor = bcolors.OKGREEN if accuracy > 0.5 else bcolors.FAIL
+    print("\n========-EVAL METRICS-=========")
+    print(f"{rescolor}", end="")
+    print(f"Accuracy:  {accuracy:.4f}   {accuracy*100:.2f}   ({tp}/{total}) {bcolors.ENDC}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall:    {recall:.4f}")
+    print(f"F1 Score:  {f1:.4f}")
+    # print(f"No. Gold:  {len(truths)}")
+    print("==============================\n")
 
     return accuracy, precision, recall, f1
 

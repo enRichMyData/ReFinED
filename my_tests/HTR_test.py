@@ -79,8 +79,7 @@ def eval_htr(
 
     measure_accuracy(all_spans, truths, verbose=verbose)
     print(f"Inference time for {len(texts)} texts: {duration:.2f} seconds")
-
-    return all_spans, truths, duration
+    # ============================================
 
 
 
@@ -90,7 +89,7 @@ if __name__ == "__main__":
 
     refined_model = load_model(device="gpu", entity_set="wikidata", model=model)
 
-    all_spans, truths, duration = eval_htr(
+    eval_htr(
         model=refined_model,
         eval_set="HTR1",
         batch_size=512,
