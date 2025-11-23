@@ -65,7 +65,7 @@ def run_refined_eval(
         sample_size: int = None
 ):
     # option sampling for debug
-    if sample_size is not None:
+    if sample_size is not None and sample_size < len(texts):
         import random
         s_sample = time.perf_counter()
         random.seed(42)
@@ -86,14 +86,39 @@ def run_refined_eval(
     measure_accuracy(spans, truths, verbose)
 
 
+
+def eval_htr(
+        model: str,
+        eval_set: str = "HTR1", # or "HTR2"
+        batch_size: int = 512,
+        prediction_mode: str = "cell",
+        verbose: bool = True
+):
+    """HTR Evaluation (1 or 2)"""
+    # dataset locations
+    dataset = f"{data_folder}/EL_challenge/{eval_set}"
+    tables_folder = f"{dataset}/tables"
+    gt_file = f"{dataset}/gt/cea_gt.csv"
+
+    # load gold data, group by table
+    gt = pd.read_csv(gt_file, header=None, names=["table","row","col","qid"])
+    table_to_truths = {t: df for t, df in gt.groupby("table")}
+
+    # build eval samples
+    texts, truths = build_eval_samples(table_to_truths, tables_folder, prediction_mode)
+
+    # run evaluation
+    run_refined_eval(texts, truths, model, batch_size, verbose)
+
 def eval_2t(
         model: str,
         eval_set: str = "2T_Round4",
         batch_size: int = 512,
         prediction_mode: str = "cell",
         verbose: bool = True,
-        sample_size: int = 10000
+        sample_size: int = None
 ):
+    """2T Round 4 Evaluation"""
     # dataset locations
     dataset = f"{data_folder}/datasets/{eval_set}"
     targets_file = f"{dataset}/targets/CEA_2T_WD_Targets.csv"
@@ -114,29 +139,39 @@ def eval_2t(
     # run evaluation
     run_refined_eval(texts, truths, model, batch_size, verbose, sample_size)
 
-
-def eval_htr(
+def eval_hardtables(
         model: str,
-        eval_set: str = "HTR1",
+        eval_set: str = "HardTablesR2", # or "HardTablesR3"
         batch_size: int = 512,
         prediction_mode: str = "cell",
-        verbose: bool = True
+        verbose: bool = True,
+        sample_size: int = None
 ):
-    # dataset locations
-    dataset = f"{data_folder}/EL_challenge/{eval_set}"
-    tables_folder = f"{dataset}/tables"
-    gt_file = f"{dataset}/gt/cea_gt.csv"
+    """HardTablesR2 Evaluation"""
+    HARDTABLE_FILES = {
+        "HardTablesR2": "HardTable_CEA_WD_Round2_Targets.csv",
+        "HardTablesR3": "HardTablesR3_CEA_WD_Round3_Targets.csv",
+    }
+    dataset = f"{data_folder}/datasets/{eval_set}"
 
-    # load gold data, group by table
+    # dataset locations
+    targets_file = f"{dataset}/targets/{HARDTABLE_FILES[eval_set]}"
+    gt_file = f"{dataset}/gt/cea.csv"
+    tables_folder = f"{dataset}/tables"
+
+    # load gold data, merge with targets
+    targets = pd.read_csv(targets_file, header=None, names=["table","row","col"])
     gt = pd.read_csv(gt_file, header=None, names=["table","row","col","qid"])
-    table_to_truths = {t: df for t, df in gt.groupby("table")}
+    merged = targets.merge(gt)
+
+    # group by table for lookup
+    table_to_truths = {t: df for t, df in merged.groupby("table")}
 
     # build eval samples
     texts, truths = build_eval_samples(table_to_truths, tables_folder, prediction_mode)
 
     # run evaluation
-    run_refined_eval(texts, truths, model, batch_size, verbose)
-
+    run_refined_eval(texts, truths, model, batch_size, verbose, sample_size)
 
 
 if __name__ == "__main__":
@@ -149,27 +184,50 @@ if __name__ == "__main__":
     eval_htr(
         model=refined_model,
         eval_set="HTR1",
-        batch_size=512,
+        batch_size=64,
         prediction_mode="cell",
         verbose=False,
     )
 
-    # # ---- HTR Evaluation (2) ----
-    # print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
-    # eval_htr(
-    #     model=refined_model,
-    #     eval_set="HTR2",
-    #     batch_size=128,
-    #     prediction_mode="row",
-    #     verbose=False
-    # )
-    #
-    # # ---- 2T Evaluation ----
-    # print_eval_section("2T_Round4")
-    # eval_2t(
-    #     model=refined_model,
-    #     eval_set="2T_Round4",
-    #     batch_size=64,
-    #     prediction_mode="cell",
-    #     verbose=False
-    # )
+    # ---- HTR Evaluation (2) ----
+    print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
+    eval_htr(
+        model=refined_model,
+        eval_set="HTR2",
+        batch_size=64,
+        prediction_mode="cell",
+        verbose=False
+    )
+
+    # ---- 2T Evaluation ----
+    print(bolden(f"\n\n{'#'*15} [ 2T_Round4 ] {'#'*15}"))
+    eval_2t(
+        model=refined_model,
+        eval_set="2T_Round4",
+        batch_size=64,
+        prediction_mode="cell",
+        verbose=False,
+        sample_size=100000
+    )
+
+    # ---- HardTables Round 2 Evaluation ----
+    print(bolden(f"\n\n{'#'*15} [ HardTablesR2 ] {'#'*15}"))
+    eval_hardtables(
+        model=refined_model,
+        eval_set="HardTablesR2",
+        batch_size=64,
+        prediction_mode="cell",
+        verbose=False,
+        sample_size=100000
+    )
+
+    # ---- HardTables Round 3 Evaluation ----
+    print(bolden(f"\n\n{'#'*15} [ HardTablesR3 ] {'#'*15}"))
+    eval_hardtables(
+        model=refined_model,
+        eval_set="HardTablesR3",
+        batch_size=64,
+        prediction_mode="cell",
+        verbose=False,
+        sample_size=100000
+    )
