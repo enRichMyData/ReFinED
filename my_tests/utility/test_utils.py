@@ -32,7 +32,7 @@ def blue_info(text: str):
 
 
 
-def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="wikidata"):
+def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="wikidata", use_precomputed=False):
     """
     Loads ReFinED pre-trained model.
     Now includes use of CPU / GPU
@@ -63,7 +63,7 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
     return Refined.from_pretrained(
         model_name=model,
         entity_set=entity_set,
-        use_precomputed_descriptions=False,
+        use_precomputed_descriptions=use_precomputed,
         download_files=True, # optional, downloads from S3 to local
         device=device  #    <--------- Decides to use 'cpu'  or 'gpu'
     )

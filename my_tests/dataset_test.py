@@ -10,51 +10,42 @@ from my_tests.accuracy import measure_accuracy
 data_folder = "my_tests/data"
 
 
-def build_eval_samples(
-        table_to_truths: dict,
-        tables_folder: str,
-        prediction_mode: str ="cell"
-):
+def build_eval_samples(table_to_truths: dict, tables_folder: str, prediction_mode: str = "cell"):
+    import time
     s_build = time.perf_counter()
     texts, truths = [], []
 
-    # collect texts and truths
     for table_file in glob.glob(f"{tables_folder}/*.csv"):
         table_name = Path(table_file).stem
 
         if table_name not in table_to_truths:
             continue
 
-        # gets (current) data-table
-        df = pd.read_csv(table_file)
-        current = table_to_truths[table_name]
+        df = pd.read_csv(table_file).astype(str)
+        table_rows = df.values.tolist()
+        golds = table_to_truths[table_name].copy()
+        golds["qid_list"] = golds["qid"].apply(lambda s: [x.split("/")[-1] for x in s.split()])
 
-        # select only relevant cells
-        for _, row in current.iterrows():
-            row_idx = int(row["row"]) - 1
-            col_idx = int(row["col"])
+        for _, gold_row in golds.iterrows():
+            r = int(gold_row["row"]) - 1
+            c = int(gold_row["col"])
 
-            row_vals = df.iloc[row_idx].astype(str).tolist()
-            cell_text = row_vals[col_idx]
+            row_vals = table_rows[r]
+            cell_text = row_vals[c]
 
-            # cell-level prediction
             if prediction_mode == "cell":
                 text = cell_text
-
-            # row-level prediction
-            elif prediction_mode == "row":
-                text = f"{cell_text} | {' | '.join(row_vals[:col_idx] + row_vals[col_idx+1:])}"
-
-            # handle multiple QIDs if needed
-            qids = [q.split("/")[-1] for q in row["qid"].split()]
+            else:
+                text = f"{cell_text} | {' | '.join(row_vals[:c] + row_vals[c+1:])}"
 
             texts.append(text)
-            truths.append(qids)
+            truths.append(gold_row["qid_list"])
 
     build_duration = time.perf_counter() - s_build
     print(f"{prediction_mode}-level prediction mode")
     print(f"Prepared {len(texts)} rows in time: {build_duration:.2f}s")
     return texts, truths
+
 
 def run_refined_eval(
         texts: list,
@@ -119,6 +110,7 @@ def eval_2t(
         sample_size: int = None
 ):
     """2T Round 4 Evaluation"""
+    print(f"[INFO] Eval start [{time.perf_counter()}]")
     # dataset locations
     dataset = f"{data_folder}/datasets/{eval_set}"
     targets_file = f"{dataset}/targets/CEA_2T_WD_Targets.csv"
@@ -148,15 +140,21 @@ def eval_hardtables(
         sample_size: int = None
 ):
     """HardTablesR2 Evaluation"""
+    from datetime import datetime
+
+    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting processing: '{eval_set}' ...")
     HARDTABLE_FILES = {
-        "HardTablesR2": "HardTable_CEA_WD_Round2_Targets.csv",
-        "HardTablesR3": "HardTablesR3_CEA_WD_Round3_Targets.csv",
+        "HardTablesR2": ("HardTable_CEA_WD_Round2_Targets.csv", "cea.csv"),
+        "HardTablesR3": ("HardTablesR3_CEA_WD_Round3_Targets.csv", "cea.csv"),
+        "Round1_T2D": ("CEA_Round1_Targets.csv", "CEA_Round1_gt_WD.csv"),
+        "Round3_2019": ("CEA_Round3_Targets.csv", "CEA_Round3_gt_WD.csv"),
+        "Round4_2020": ("CEA_Round4_Targets.csv", "cea.csv"),
     }
     dataset = f"{data_folder}/datasets/{eval_set}"
 
     # dataset locations
-    targets_file = f"{dataset}/targets/{HARDTABLE_FILES[eval_set]}"
-    gt_file = f"{dataset}/gt/cea.csv"
+    targets_file = f"{dataset}/targets/{HARDTABLE_FILES[eval_set][0]}"
+    gt_file = f"{dataset}/gt/{HARDTABLE_FILES[eval_set][1]}"
     tables_folder = f"{dataset}/tables"
 
     # load gold data, merge with targets
@@ -177,57 +175,94 @@ def eval_hardtables(
 if __name__ == "__main__":
 
     model = "wikipedia_model_with_numbers"
-    refined_model = load_model(device="gpu", entity_set="wikidata", model=model)
+    refined_model = load_model(device="gpu", entity_set="wikidata", model=model, use_precomputed=False)
 
-    # ---- HTR Evaluation (1) ----
-    print(bolden(f"\n\n{'#'*15} [ HTR1 ] {'#'*15}"))
-    eval_htr(
-        model=refined_model,
-        eval_set="HTR1",
-        batch_size=64,
-        prediction_mode="cell",
-        verbose=False,
-    )
+    # for batch in [8]:
+    for batch in [64, 128, 256, 512]:
 
-    # ---- HTR Evaluation (2) ----
-    print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
-    eval_htr(
-        model=refined_model,
-        eval_set="HTR2",
-        batch_size=64,
-        prediction_mode="cell",
-        verbose=False
-    )
+        # ---- HTR Evaluation (1) ----
+        print(bolden(f"\n\n{'#'*15} [ HTR1 ] {'#'*15}"))
+        eval_htr(
+            model=refined_model,
+            eval_set="HTR1",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+        )
 
-    # ---- 2T Evaluation ----
-    print(bolden(f"\n\n{'#'*15} [ 2T_Round4 ] {'#'*15}"))
-    eval_2t(
-        model=refined_model,
-        eval_set="2T_Round4",
-        batch_size=64,
-        prediction_mode="cell",
-        verbose=False,
-        sample_size=100000
-    )
+        # ---- HTR Evaluation (2) ----
+        print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
+        eval_htr(
+            model=refined_model,
+            eval_set="HTR2",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+        )
 
-    # ---- HardTables Round 2 Evaluation ----
-    print(bolden(f"\n\n{'#'*15} [ HardTablesR2 ] {'#'*15}"))
-    eval_hardtables(
-        model=refined_model,
-        eval_set="HardTablesR2",
-        batch_size=64,
-        prediction_mode="cell",
-        verbose=False,
-        sample_size=100000
-    )
+        # ---- 2T Evaluation ----
+        print(bolden(f"\n\n{'#'*15} [ 2T_Round4 ] {'#'*15}"))
+        eval_2t(
+            model=refined_model,
+            eval_set="2T_Round4",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
 
-    # ---- HardTables Round 3 Evaluation ----
-    print(bolden(f"\n\n{'#'*15} [ HardTablesR3 ] {'#'*15}"))
-    eval_hardtables(
-        model=refined_model,
-        eval_set="HardTablesR3",
-        batch_size=64,
-        prediction_mode="cell",
-        verbose=False,
-        sample_size=100000
-    )
+        # ---- HardTables Round 2 Evaluation ----
+        print(bolden(f"\n\n{'#'*15} [ HardTablesR2 ] {'#'*15}"))
+        eval_hardtables(
+            model=refined_model,
+            eval_set="HardTablesR2",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
+
+        # ---- HardTables Round 3 Evaluation ----
+        print(bolden(f"\n\n{'#'*15} [ HardTablesR3 ] {'#'*15}"))
+        eval_hardtables(
+            model=refined_model,
+            eval_set="HardTablesR3",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
+
+        #TODO: somethings must be wrong with this one
+        # ---- Round1 T2D Evaluation ----
+        print(bolden(f"\n\n{'#' * 15} [ Round1_T2D ] {'#' * 15}"))
+        eval_hardtables(
+            model=refined_model,
+            eval_set="Round1_T2D",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
+
+        # ---- Round3 2019 Evaluation ----
+        print(bolden(f"\n\n{'#' * 15} [ Round3_2019 ] {'#' * 15}"))
+        eval_hardtables(
+            model=refined_model,
+            eval_set="Round3_2019",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
+
+        # ---- Round4 2020 Evaluation ----
+        print(bolden(f"\n\n{'#' * 15} [ Round4_2020 ] {'#' * 15}"))
+        eval_hardtables(
+            model=refined_model,
+            eval_set="Round4_2020",
+            batch_size=batch,
+            prediction_mode="cell",
+            verbose=False,
+            sample_size=None
+        )
