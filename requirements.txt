@@ -16,3 +16,4 @@ botocore
 
 # new libraries
 pandas
+openai
