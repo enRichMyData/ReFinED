@@ -2,10 +2,11 @@ import pandas as pd
 import glob
 import time
 from pathlib import Path
-
+from datetime import datetime
 
 from my_tests.utility.test_utils import load_model, run_refined_batch, bolden
 from my_tests.accuracy import measure_accuracy
+
 
 data_folder = "my_tests/data"
 
@@ -86,6 +87,8 @@ def eval_htr(
         verbose: bool = True
 ):
     """HTR Evaluation (1 or 2)"""
+    print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{eval_set}' ...")
+
     # dataset locations
     dataset = f"{data_folder}/EL_challenge/{eval_set}"
     tables_folder = f"{dataset}/tables"
@@ -110,7 +113,8 @@ def eval_2t(
         sample_size: int = None
 ):
     """2T Round 4 Evaluation"""
-    print(f"[INFO] Eval start [{time.perf_counter()}]")
+    print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{eval_set}' ...")
+
     # dataset locations
     dataset = f"{data_folder}/datasets/{eval_set}"
     targets_file = f"{dataset}/targets/CEA_2T_WD_Targets.csv"
@@ -140,9 +144,8 @@ def eval_hardtables(
         sample_size: int = None
 ):
     """HardTablesR2 Evaluation"""
-    from datetime import datetime
+    print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{eval_set}' ...")
 
-    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting processing: '{eval_set}' ...")
     HARDTABLE_FILES = {
         "HardTablesR2": ("HardTable_CEA_WD_Round2_Targets.csv", "cea.csv"),
         "HardTablesR3": ("HardTablesR3_CEA_WD_Round3_Targets.csv", "cea.csv"),
@@ -172,13 +175,14 @@ def eval_hardtables(
     run_refined_eval(texts, truths, model, batch_size, verbose, sample_size)
 
 
+
 if __name__ == "__main__":
 
     model = "wikipedia_model_with_numbers"
     refined_model = load_model(device="gpu", entity_set="wikidata", model=model, use_precomputed=False)
 
-    # for batch in [8]:
-    for batch in [64, 128, 256, 512]:
+    for batch in [8]:
+    # for batch in [64, 128, 256, 512]:
 
         # ---- HTR Evaluation (1) ----
         print(bolden(f"\n\n{'#'*15} [ HTR1 ] {'#'*15}"))
