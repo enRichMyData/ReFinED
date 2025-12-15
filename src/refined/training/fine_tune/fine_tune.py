@@ -33,23 +33,76 @@ def main():
 
     datasets = get_datasets_obj(preprocessor=refined.preprocessor)
 
+    # OLD
+    # evaluation_dataset_name_to_docs = {
+    #     "AIDA": list(datasets.get_aida_docs(
+    #         split="dev",
+    #         include_gold_label=True,
+    #         filter_not_in_kb=True,
+    #         include_spans=True,
+    #     ))
+    # }
+    # start_fine_tuning_task(refined=refined,
+    #                        fine_tuning_args=fine_tuning_args,
+    #                        train_docs=list(datasets.get_aida_docs(split="train", include_gold_label=True)),
+    #                        evaluation_dataset_name_to_docs=evaluation_dataset_name_to_docs)
+
+
+    # NEW
+    # --- Split training set into train/dev ---
+    LIMIT = None
+    all_companies_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))[:LIMIT]
+    all_movies_docs = list(datasets.get_movie_docs(split="train", include_gold_label=True))[:LIMIT]
+
+    all_train_docs = all_companies_docs + all_movies_docs
+
+    import random
+    random.shuffle(all_train_docs)  # disperses biases
+
+    split_idx = int(0.9 * len(all_train_docs))  # 90/10 split
+
+    train_docs = all_train_docs[:split_idx]     # 90% training
+    dev_docs = all_train_docs[split_idx:]       # 10% dev/validation
+
+    # --- Use DEV set for evaluation during training ---
     evaluation_dataset_name_to_docs = {
-        "AIDA": list(datasets.get_aida_docs(
-            split="dev",
-            include_gold_label=True,
-            filter_not_in_kb=True,
-            include_spans=True,
-        ))
+        "DEV": dev_docs
     }
-    start_fine_tuning_task(refined=refined,
-                           fine_tuning_args=fine_tuning_args,
-                           train_docs=list(datasets.get_aida_docs(split="train", include_gold_label=True)),
-                           evaluation_dataset_name_to_docs=evaluation_dataset_name_to_docs)
+
+    # fine_tuning_args.restore_model_path = "fine_tuned_models/merged_fine_tune/f1_0.5714/model.pt"
+
+    # --- Run training ---
+    start_fine_tuning_task(
+        refined=refined,
+        fine_tuning_args=fine_tuning_args,
+        train_docs=train_docs,
+        evaluation_dataset_name_to_docs=evaluation_dataset_name_to_docs
+    )
+
+    # # --- After training, evaluate on TEST once ---
+    # test_docs = list(datasets.get_companies_docs(
+    #     split="test",
+    #     include_gold_label=True,
+    #     filter_not_in_kb=True,
+    #     include_spans=True,
+    # ))
+    #
+    # final_metrics = evaluate(
+    #     refined=refined,
+    #     evaluation_dataset_name_to_docs={"TEST": test_docs},
+    #     el=fine_tuning_args.el,
+    #     ed=True,
+    #     ed_threshold=fine_tuning_args.ed_threshold
+    # )
+    #
+    # print("Final test results:", final_metrics)
 
 
-def start_fine_tuning_task(refined: 'Refined', train_docs: Iterable[Doc],
-                           evaluation_dataset_name_to_docs: Dict[str, Iterable[Doc]],
-                           fine_tuning_args: FineTuningArgs):
+
+def start_fine_tuning_task(refined: 'Refined',
+                           fine_tuning_args: FineTuningArgs,
+                           train_docs: Iterable[Doc],
+                           evaluation_dataset_name_to_docs: Dict[str, Iterable[Doc]]):
     LOG.info("Fine-tuning end-to-end EL" if fine_tuning_args.el else "Fine-tuning ED only.")
     train_docs = list(train_docs)
     training_dataset = DocDataset(
@@ -57,7 +110,10 @@ def start_fine_tuning_task(refined: 'Refined', train_docs: Iterable[Doc],
         preprocessor=refined.preprocessor
     )
     training_dataloader = DataLoader(
-        dataset=training_dataset, batch_size=fine_tuning_args.batch_size, shuffle=True, num_workers=1,
+        dataset=training_dataset,
+        batch_size=fine_tuning_args.batch_size,
+        shuffle=True,
+        num_workers=0, # from 1
         collate_fn=training_dataset.collate
     )
 

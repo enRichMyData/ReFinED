@@ -1,0 +1,1862 @@
+{
+  "NQK7B1JD": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "IH9YIR7T": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5NFRSNRM": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "9SKOZCJN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "9NYXE8JY": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "X1FK1EL9": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "9PRE1ZTN": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "C93XQVXO": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "LCBAIKDQ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "P0ZSGNRQ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "89GM9ZJW": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "KJQGZ38D": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "C1TYEJXD": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "W8AVXGFZ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "LCAPKZ06": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "OFL33CS3": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "K3ML0XEJ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "CFYKPBO3": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "I7OIFNCX": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "OVUHMECF": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "NNW0J4RU": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "HXA71H9Q": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1Z8NMAI3": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "D3S7HZEJ": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "WTFHB5UP": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "ESU2M07L": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "AUH91PXB": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "4": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "3LYGPKR9": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Z654ZXNI": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "SX5IIFKD": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "RH67R1DF": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "J7Z2ZKJ3": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "LS7PUF6Y": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "WSXH1CEF": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "PC54CX0I": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "YRFJFZ6Z": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "2VTB3DBW": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5WUHS6IV": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER",
+      "4": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "12K4KCAW": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "3HHZ7VEY": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "JOTL7H8S": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "3SN1E96G": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "V0HKC2U2": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "11MUJE2L": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "004RX1PJ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "0HTTC2CF": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "16MHVXS5": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "B7WY06KE": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "4": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "85R8V29V": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "4": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "M1KKN4SV": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Q152EVZN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "POVD5UXG": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "4": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Q1WXNPHD": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "HAWQZPKM": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "3RVCIC2D": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "4": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8DWWECLV": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "6VVO0UKN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "CF5BZISY": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "B4XUH0BT": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "E8QHGYM0": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "20051UTJ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1ZMN6B0U": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "3UCB2945": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "GMZVO9QZ": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "UCBTCDBY": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "N1KLTFJS": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "XCP1D5XH": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "MNBH5D3J": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "VHSPXI1U": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "A56OGETX": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "V4QCZD80": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "EQ45OG6D": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "0ZEFN8XZ": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "U33ZCG8A": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "6MR56YQN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "0FZ3BZOR": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "OILKS9FV": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "ZRWO683W": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "KFVG2YJY": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "JW3IS4EO": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "040OOQWI": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "G3CXHX7S": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "TTCLNIOI": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "VV5BYCMW": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "X7RNTT6T": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "F6RDR8QH": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1SRVC8FI": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Y0MXSX2V": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "R66991OZ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "0JO87A9Y": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "4": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Y8H8LCMS": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "J3EBSXKB": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "DFRU6OJ0": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "RD6GYWQ9": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "FS732WHP": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "H6W3ZCJ7": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "6IGVXYAR": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "178ZXCD6": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "L7HPD1BN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "PQV7CRTE": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "G06A5VMG": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5I2VS233": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "ZMOMMK8W": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "JYZSQT8I": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "00X7C4X7": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "WD26R4FS": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "P7G5H9TZ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "SUJBVAXP": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "7B2MJBJ6": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "CTNV5ERT": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "G5K3GRU6": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "98ZK24C6": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "42HO55NS": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "F65M8F3C": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "48JKZUIJ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "QIYBVSKQ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "ZTZRJAL1": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "FPBRYFPM": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "K5Y9RHWH": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "PH2P9NAW": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "BVXMTQBS": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "MMKSEAWQ": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "WZ1WDBHS": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "VA6ZZVPM": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "GO08I9NN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "4F2U2YS9": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "7C0G0R4M": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "6Z084BQH": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1LAUGX39": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1A9CE9GU": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "VE54CNIP": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "UES6936H": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "TFLNWNSF": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "Z2BUWYCW": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "YCYHUCFN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "V585ODNH": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5K979S7T": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "VRCWY3LR": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "UV3PSHZN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "0FX36K78": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "9MH2Y9EN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "JBTAKAV1": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "EN3KC9PA": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "WWQXGBG9": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "9TBY92F4": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "DZVGH6NL": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "QLEXN94Y": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "VU9L64SU": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "DRKJS4WF": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "RA0178UV": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8WZYKTRA": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8DNBZBE4": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "CY5NEXJ2": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "TSY759XE": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5GNQIAGC": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "K6V4GTW6": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "BHYT3JN7": {
+    "NE": {
+      "0": "OTHER",
+      "4": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "ZII3SWRN": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "G4USL2KN": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "2SGE8L9D": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER",
+      "4": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "20N4YF98": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "8I8QDEPO": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "74KL5PGJ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "GJEPOIO4": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8JBV49EA": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "Z92ZC13V": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "ZB1BTB4C": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "QI8FPOEX": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8X42CAF1": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "5KTG4XNY": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "ZLCZCA5V": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "WPO2CMW6": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "6POKY4YM": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "85TGR8P0": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "3": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "HW0QGHK2": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "74WC7OJZ": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "5RO3R21O": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "2YMT5ZUG": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "21IOWQK5": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "D8DO4SE7": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "1WI5SB8W": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "R4KOGBC6": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "8LJAI1M5": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "9S7ZYJXU": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "V8F863ZP": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "4LJOJTYF": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING",
+      "2": "STRING"
+    },
+    "IGNORED": []
+  },
+  "2VTFXODC": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "JM188DA0": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "DUTG5MAC": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "NKNG2LAS": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "HNKFW9JS": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER",
+      "3": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "DWMGVCFJ": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "PK630A5T": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "8A6358C7": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "Z2FMQZKH": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "RK8I119S": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "JQ14FOT4": {
+    "NE": {
+      "0": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  },
+  "P4214UEJ": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "1XS3T3P4": {
+    "NE": {
+      "0": "OTHER",
+      "1": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {},
+    "IGNORED": []
+  },
+  "WFVVMXQM": {
+    "NE": {
+      "0": "OTHER",
+      "2": "OTHER"
+    },
+    "LIT": {
+      "1": "STRING"
+    },
+    "IGNORED": []
+  }
+}

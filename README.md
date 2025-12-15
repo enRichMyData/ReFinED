@@ -1,4 +1,76 @@
 # ReFinED
+---
+
+## 📌 New – Instructions
+
+# ⚠️ Compatibility Notice
+
+This project requires **Python 3.8**.  
+Update: works on **Python 3.9.21** using `torch==1.12.1+cpu`.
+
+The latest tested working version of the **`transformers`** library is **4.29.2**,  
+since newer releases require Python 3.9+.
+
+### 1. Create virtual environment (recommended)
+- **Linux / macOS / WSL** / Windows (cmd / powershell)
+```bash
+python -m venv .venv
+```
+- nb! make sure python version is 3.8, if not do `python3.8` or ``python3.9``
+
+### 2. Activate virtual environment (recommended)
+- **Bash / WSL / macOS**
+```bash
+source .venv/bin/activate
+```
+
+- **Windows (Command Prompt)**
+```cmd
+.venv\Scripts\activate.bat
+```
+
+- ***Windows (Powershell)***
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+For editing code:
+```bash
+pip install -e .
+```
+For general usage:
+```bash
+pip install .
+```
+
+### 4. Set source-path
+- **Bash / WSL / macOS**
+```bash
+export PYTHONPATH=$PYTHONPATH:src
+```
+
+- **Windows (Command Prompt)**
+```cmd
+set PYTHONPATH=%PYTHONPATH%;src
+```
+
+- **Windows (Powershell)**
+```powershell
+$env:PYTHONPATH += ";src"
+```
+
+### 5. Run!
+```bash
+python my_tests/run_refined.py
+```
+
+### Deactivate virtual environment
+```bash
+deactivate
+```
+---
+
 ## Quickstart
 ```commandline
 pip install https://github.com/amazon-science/ReFinED/archive/refs/tags/V1.zip

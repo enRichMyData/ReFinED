@@ -1,0 +1,6 @@
+
+=== Run 2025-10-04 16:51:16 ===
+File: companies_test.csv
+Accuracy: 78.60%
+EVAL-ED: P=0.994, R=0.921, F1=0.956
+

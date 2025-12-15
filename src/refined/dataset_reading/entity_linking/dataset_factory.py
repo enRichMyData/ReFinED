@@ -1,5 +1,6 @@
 import json
 from typing import Iterable
+import pandas as pd
 
 from refined.data_types.doc_types import Doc
 from refined.data_types.base_types import Entity, Span
@@ -307,3 +308,205 @@ class Datasets:
                     )
                 yield Doc.from_text_with_spans(text=text, spans=spans, preprocessor=self.preprocessor,
                                                md_spans=md_spans)
+
+    def get_movie_docs(
+            self,
+            split: str,
+            include_spans: bool = True,
+            include_gold_label: bool = True,
+            filter_not_in_kb: bool = True,
+    ) -> Iterable[Doc]:
+        # Paths
+        text_path =  f"my_tests/data/movies/movies_{split}.csv"       # train/test split
+        truth_path = f"my_tests/data/movies/el_movies_gt_wikidata.csv"
+
+
+        # Load CSVs
+        dftext = pd.read_csv(text_path)
+        dftruth = pd.read_csv(truth_path)
+        dftruth = dftruth[dftruth["tableName"] == f"movies_{split}"]  # filter to relevant split
+        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "", regex=False)  # only use QID
+
+        # Merge text and truth by row index
+        frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
+
+        docs = []
+        for _, row in frame.iterrows():
+            # Full text line as context
+            text = ",".join(str(row[col]) for col in dftext.columns if pd.notna(row[col]))
+
+            gold_entity = Entity(
+                wikidata_entity_id=row["entity"],
+                wikipedia_entity_title=row["Title"].replace(" ", "_"),
+                human_readable_name=row["Title"]
+            )
+
+            start = text.find(str(row['Title']))
+            length = len(str(row['Title']))
+
+            # Gold span
+            spans = [
+                Span(
+                    text=row['Title'],
+                    start=start,
+                    ln=length,
+                    gold_entity=gold_entity,
+                    coarse_type="MENTION"
+                )
+            ]
+
+            # MD span (no gold)
+            md_spans = [
+                Span(
+                    text=row['Title'],
+                    start=start,
+                    ln=length,
+                    gold_entity=None,
+                    coarse_type="MENTION"
+                )
+            ]
+
+            # Build doc
+            doc = Doc.from_text_with_spans(
+                text=text,
+                spans=spans,
+                md_spans=md_spans,
+                preprocessor=self.preprocessor
+            )
+            docs.append(doc)
+
+        return docs
+
+    def get_companies_docs(
+            self,
+            split: str,
+            include_spans: bool = True,
+            include_gold_label: bool = True,
+            filter_not_in_kb: bool = True,
+    ) -> Iterable[Doc]:
+        # Paths
+        text_path =  f"my_tests/data/companies/companies_{split}.csv"       # train/test split
+        truth_path = f"my_tests/data/companies/el_companies_gt_wikidata.csv"
+
+        # Load CSVs
+        dftext = pd.read_csv(text_path)
+        dftruth = pd.read_csv(truth_path)
+        dftruth = dftruth[dftruth["tableName"] == f"companies_{split}"]  # train/test split
+        dftruth["entity"] = dftruth["entity"].str.replace("http://www.wikidata.org/entity/", "",
+                                                          regex=False)  # only use QID
+        # Merge text and truth by row index in one frame
+        frame = pd.merge(dftext, dftruth, left_index=True, right_on="idRow")
+
+        docs = []
+        for _, row in frame.iterrows():
+            # Full text line as context
+            text = ",".join(str(row[col]) for col in dftext.columns if pd.notna(row[col]))
+
+            gold_entity = Entity(
+                wikidata_entity_id=row["entity"],
+                wikipedia_entity_title=row["company"].replace(" ", "_"),
+                human_readable_name=row["company"]
+            )
+
+            # start and length of main entity
+            start = text.find(str(row['company']))
+            length = len(str(row['company']))
+
+            # Gold span for main entity
+            spans = [
+                Span(
+                    text=row['company'],
+                    start=start,
+                    ln=length,
+                    gold_entity=gold_entity,
+                    coarse_type="MENTION"
+                )
+            ]
+
+            # MD span (no gold)
+            md_spans = [
+                Span(
+                    text=row['company'],
+                    start=start,
+                    ln=length,
+                    gold_entity=None,
+                    coarse_type="MENTION"
+                )
+            ]
+
+            # Build doc
+            doc = Doc.from_text_with_spans(
+                text=text,
+                spans=spans,
+                md_spans=md_spans,
+                preprocessor=self.preprocessor
+            )
+            docs.append(doc)
+
+        return docs
+
+    def get_hardtable_docs(
+            self,
+            split: str,
+            include_spans: bool = True,
+            include_gold_label: bool = True,
+            filter_not_in_kb: bool = True,
+    ) -> Iterable[Doc]:
+        import glob
+        tables_folder = f"my_tests/data/EL_challenge/{split}/tables"
+        cell_to_qid_file = f"my_tests/data/EL_challenge/{split}/cell_to_qid.json"
+
+        # Load gold data
+        with open(cell_to_qid_file, "r") as f:
+            cell_to_qid = json.load(f)
+
+        docs = []
+
+        # Iterate over all CSV tables
+        for table_file in glob.glob(f"{tables_folder}/*.csv"):
+            table_name = table_file.split("/")[-1].split(".")[0]
+            df = pd.read_csv(table_file)
+
+            if table_name not in cell_to_qid:
+                continue
+
+            # Iterate over gold-labeled cells
+            for cell_id, qid in cell_to_qid[table_name].items():
+                row_idx, col_idx = map(int, cell_id.split("-"))
+                text = str(df.iat[row_idx, col_idx])
+
+                gold_entity = Entity(
+                    wikidata_entity_id=qid,
+                    human_readable_name=text
+                )
+
+                start = 0  # text is just the cell
+                length = len(text)
+                spans = [
+                    Span(
+                        text=text,
+                        start=start,
+                        ln=length,
+                        gold_entity=gold_entity,
+                        coarse_type="MENTION"
+                    )
+                ]
+                md_spans = [
+                    Span(
+                        text=text,
+                        start=start,
+                        ln=length,
+                        gold_entity=None,
+                        coarse_type="MENTION"
+                    )
+                ]
+
+                doc = Doc.from_text_with_spans(
+                    text=text,
+                    spans=spans if spans else None,
+                    md_spans=md_spans if md_spans else None,
+                    preprocessor=self.preprocessor
+                )
+                docs.append(doc)
+
+        return docs
