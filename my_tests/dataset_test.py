@@ -175,8 +175,71 @@ def eval_hardtables(
     run_refined_eval(texts, truths, model, batch_size, verbose, sample_size)
 
 
+def run_eval_generic(
+    model,
+    dataset_name: str,
+    dataset_type: str = "HTR",  # "HTR", "2T", "other"
+    batch_size: int = 512,
+    prediction_mode: str = "cell",
+    verbose: bool = True,
+    sample_size: int = None
+):
+    print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{dataset_name}' ...")
+
+    if dataset_type == "HTR":
+        dataset = f"{data_folder}/EL_challenge/{dataset_name}"
+        tables_folder = f"{dataset}/tables"
+        gt_file = f"{dataset}/gt/cea_gt.csv"
+        gt = pd.read_csv(gt_file, header=None, names=["table","row","col","qid"])
+        table_to_truths = {t: df for t, df in gt.groupby("table")}
+
+    else:
+        # 2T or HardTables
+        dataset = f"{data_folder}/datasets/{dataset_name}"
+        if dataset_type == "2T":
+            targets_file = f"{dataset}/targets/CEA_2T_WD_Targets.csv"
+            gt_file = f"{dataset}/gt/cea.csv"
+
+        elif dataset_type == "other":
+            HARDTABLE_FILES = {
+                "HardTablesR2": ("HardTable_CEA_WD_Round2_Targets.csv", "cea.csv"),
+                "HardTablesR3": ("HardTablesR3_CEA_WD_Round3_Targets.csv", "cea.csv"),
+                "Round1_T2D": ("CEA_Round1_Targets.csv", "CEA_Round1_gt_WD.csv"),
+                "Round3_2019": ("CEA_Round3_Targets.csv", "CEA_Round3_gt_WD.csv"),
+                "Round4_2020": ("CEA_Round4_Targets.csv", "cea.csv"),
+            }
+            targets_file = f"{dataset}/targets/{HARDTABLE_FILES[dataset_name][0]}"
+            gt_file = f"{dataset}/gt/{HARDTABLE_FILES[dataset_name][1]}"
+
+        tables_folder = f"{dataset}/tables"
+        targets = pd.read_csv(targets_file, header=None, names=["table","row","col"])
+        gt = pd.read_csv(gt_file, header=None, names=["table","row","col","qid"])
+        merged = targets.merge(gt)
+        table_to_truths = {t: df for t, df in merged.groupby("table")}
+
+    # Build samples and run evaluation
+    texts, truths = build_eval_samples(table_to_truths, tables_folder, prediction_mode)
+
+    # Optionally sample
+    if sample_size is not None and sample_size < len(texts):
+        import random
+        combined = list(zip(texts, truths))
+        random.seed(42)
+        random.shuffle(combined)
+        combined = combined[:sample_size]
+        texts, truths = map(list, zip(*combined))
+        texts, truths = list(texts), list(truths)
+        print(f"Sampled {sample_size} entries")
+
+    s_infer = time.perf_counter()
+    spans = run_refined_batch(texts, model, batch_size)
+    print(f"Inference time for {len(texts)} rows: {time.perf_counter() - s_infer:.2f}s")
+    measure_accuracy(spans, truths, verbose)
+
 
 if __name__ == "__main__":
+
+    sample_size = 1000
 
     model = "wikipedia_model_with_numbers"
     refined_model = load_model(device="gpu", entity_set="wikidata", model=model, use_precomputed=False)
@@ -184,89 +247,191 @@ if __name__ == "__main__":
     for batch in [8]:
     # for batch in [64, 128, 256, 512]:
 
-        # ---- HTR Evaluation (1) ----
+        # HTR1
         print(bolden(f"\n\n{'#'*15} [ HTR1 ] {'#'*15}"))
-        eval_htr(
+        run_eval_generic(
             model=refined_model,
-            eval_set="HTR1",
+            dataset_name="HTR1",
+            dataset_type="HTR",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
+            sample_size=sample_size
         )
 
-        # ---- HTR Evaluation (2) ----
+        # HTR2
         print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
-        eval_htr(
+        run_eval_generic(
             model=refined_model,
-            eval_set="HTR2",
+            dataset_name="HTR2",
+            dataset_type="HTR",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
+            sample_size=sample_size
         )
 
-        # ---- 2T Evaluation ----
+        # 2T_Round4
         print(bolden(f"\n\n{'#'*15} [ 2T_Round4 ] {'#'*15}"))
-        eval_2t(
+        run_eval_generic(
             model=refined_model,
-            eval_set="2T_Round4",
+            dataset_name="2T_Round4",
+            dataset_type="2T",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
 
-        # ---- HardTables Round 2 Evaluation ----
+        # HardTablesR2
         print(bolden(f"\n\n{'#'*15} [ HardTablesR2 ] {'#'*15}"))
-        eval_hardtables(
+        run_eval_generic(
             model=refined_model,
-            eval_set="HardTablesR2",
+            dataset_name="HardTablesR2",
+            dataset_type="other",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
 
-        # ---- HardTables Round 3 Evaluation ----
+        # HardTablesR3
         print(bolden(f"\n\n{'#'*15} [ HardTablesR3 ] {'#'*15}"))
-        eval_hardtables(
+        run_eval_generic(
             model=refined_model,
-            eval_set="HardTablesR3",
+            dataset_name="HardTablesR3",
+            dataset_type="other",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
 
-        #TODO: somethings must be wrong with this one
-        # ---- Round1 T2D Evaluation ----
-        print(bolden(f"\n\n{'#' * 15} [ Round1_T2D ] {'#' * 15}"))
-        eval_hardtables(
+        #TODO FEIL
+        # Round1_T2D
+        print(bolden(f"\n\n{'#'*15} [ Round1_T2D ] {'#'*15}"))
+        run_eval_generic(
             model=refined_model,
-            eval_set="Round1_T2D",
+            dataset_name="Round1_T2D",
+            dataset_type="other",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
 
-        # ---- Round3 2019 Evaluation ----
-        print(bolden(f"\n\n{'#' * 15} [ Round3_2019 ] {'#' * 15}"))
-        eval_hardtables(
+        # Round3_2019
+        print(bolden(f"\n\n{'#'*15} [ Round3_2019 ] {'#'*15}"))
+        run_eval_generic(
             model=refined_model,
-            eval_set="Round3_2019",
+            dataset_name="Round3_2019",
+            dataset_type="other",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
 
-        # ---- Round4 2020 Evaluation ----
-        print(bolden(f"\n\n{'#' * 15} [ Round4_2020 ] {'#' * 15}"))
-        eval_hardtables(
+        # Round4_2020
+        print(bolden(f"\n\n{'#'*15} [ Round4_2020 ] {'#'*15}"))
+        run_eval_generic(
             model=refined_model,
-            eval_set="Round4_2020",
+            dataset_name="Round4_2020",
+            dataset_type="other",
             batch_size=batch,
             prediction_mode="cell",
             verbose=False,
-            sample_size=None
+            sample_size=sample_size
         )
+
+
+
+        ##################################### old
+
+        # # ---- HTR Evaluation (1) ----
+        # print(bolden(f"\n\n{'#'*15} [ HTR1 ] {'#'*15}"))
+        # eval_htr(
+        #     model=refined_model,
+        #     eval_set="HTR1",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        # )
+        #
+        # # ---- HTR Evaluation (2) ----
+        # print(bolden(f"\n\n{'#'*15} [ HTR2 ] {'#'*15}"))
+        # eval_htr(
+        #     model=refined_model,
+        #     eval_set="HTR2",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        # )
+        #
+        # # ---- 2T Evaluation ----
+        # print(bolden(f"\n\n{'#'*15} [ 2T_Round4 ] {'#'*15}"))
+        # eval_2t(
+        #     model=refined_model,
+        #     eval_set="2T_Round4",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+        #
+        # # ---- HardTables Round 2 Evaluation ----
+        # print(bolden(f"\n\n{'#'*15} [ HardTablesR2 ] {'#'*15}"))
+        # eval_hardtables(
+        #     model=refined_model,
+        #     eval_set="HardTablesR2",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+        #
+        # # ---- HardTables Round 3 Evaluation ----
+        # print(bolden(f"\n\n{'#'*15} [ HardTablesR3 ] {'#'*15}"))
+        # eval_hardtables(
+        #     model=refined_model,
+        #     eval_set="HardTablesR3",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+        #
+        # #TODO: somethings must be wrong with this one
+        # # ---- Round1 T2D Evaluation ----
+        # print(bolden(f"\n\n{'#' * 15} [ Round1_T2D ] {'#' * 15}"))
+        # eval_hardtables(
+        #     model=refined_model,
+        #     eval_set="Round1_T2D",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+        #
+        # # ---- Round3 2019 Evaluation ----
+        # print(bolden(f"\n\n{'#' * 15} [ Round3_2019 ] {'#' * 15}"))
+        # eval_hardtables(
+        #     model=refined_model,
+        #     eval_set="Round3_2019",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+        #
+        # # ---- Round4 2020 Evaluation ----
+        # print(bolden(f"\n\n{'#' * 15} [ Round4_2020 ] {'#' * 15}"))
+        # eval_hardtables(
+        #     model=refined_model,
+        #     eval_set="Round4_2020",
+        #     batch_size=batch,
+        #     prediction_mode="cell",
+        #     verbose=False,
+        #     sample_size=None
+        # )
+
