@@ -510,3 +510,59 @@ class Datasets:
                 docs.append(doc)
 
         return docs
+
+    # NEW! for fine tuning HARDTABLE datsets
+    def get_htr_docs(self, split: str, sample_size: int = 1000) -> list[Doc]:
+        import glob
+        from pathlib import Path
+        tables_folder = f"my_tests/data/EL_challenge/{split}/tables"
+        cell_to_qid_file = f"my_tests/data/EL_challenge/{split}/cell_to_qid.json"
+
+        with open(cell_to_qid_file, "r") as f:
+            cell_to_qid = json.load(f)
+
+        docs = []
+        for table_file in glob.glob(f"{tables_folder}/*.csv"):
+            table_name = Path(table_file).stem
+            if table_name not in cell_to_qid:
+                continue
+            df = pd.read_csv(table_file).astype(str)
+
+            for (row_idx, col_idx), qid in list(cell_to_qid[table_name].items())[:sample_size]:
+                row_idx, col_idx = map(int, (row_idx, col_idx))
+                text = str(df.iat[row_idx, col_idx])
+
+                gold_entity = Entity(
+                    wikidata_entity_id=qid,
+                    human_readable_name=text
+                )
+
+                start = 0
+                length = len(text)
+                spans = [
+                    Span(
+                        text=text,
+                        start=start,
+                        ln=length,
+                        gold_entity=gold_entity,
+                        coarse_type="MENTION"
+                    )
+                ]
+                md_spans = [
+                    Span(
+                        text=text,
+                        start=start,
+                        ln=length,
+                        gold_entity=None,
+                        coarse_type="MENTION"
+                    )
+                ]
+
+                doc = Doc.from_text_with_spans(
+                    text=text,
+                    spans=spans,
+                    md_spans=md_spans,
+                    preprocessor=self.preprocessor
+                )
+                docs.append(doc)
+        return docs

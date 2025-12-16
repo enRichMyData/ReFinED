@@ -49,27 +49,31 @@ def main():
 
 
     # NEW
-    # --- Split training set into train/dev ---
-    LIMIT = None
-    all_companies_docs = list(datasets.get_companies_docs(split="train", include_gold_label=True))[:LIMIT]
-    all_movies_docs = list(datasets.get_movie_docs(split="train", include_gold_label=True))[:LIMIT]
+    # samples various datasets, 1k lines each
+    LIMIT = 1000
+    HTR1_docs = datasets.get_htr_docs("HTR1", sample_size=LIMIT)
+    HTR2_docs = datasets.get_htr_docs("HTR2", sample_size=LIMIT)
+    HardTableR2_docs = datasets.get_htr_docs("HardTablesR2", sample_size=LIMIT)
+    HardTableR3_docs = datasets.get_htr_docs("HardTablesR3", sample_size=LIMIT)
+    # Round1_T2D_docs = datasets.get_htr_docs("Round1_T2D", sample_size=LIMIT)  # <-- something wrong?
+    Round3_2019_docs = datasets.get_htr_docs("Round3_2019", sample_size=LIMIT)
+    Round4_2020_docs = datasets.get_htr_docs("Round4_2020", sample_size=LIMIT)
+    Round2T_docs = datasets.get_htr_docs("2T_Round4", sample_size=LIMIT)
 
-    all_train_docs = all_companies_docs + all_movies_docs
+    # combines dataset samples
+    all_train_docs = (
+            HTR1_docs + HTR2_docs + HardTableR2_docs + HardTableR3_docs +
+            Round3_2019_docs + Round4_2020_docs + Round2T_docs # + Round1_T2D_docs
+    )
 
     import random
-    random.shuffle(all_train_docs)  # disperses biases
+    random.shuffle(all_train_docs)
 
     split_idx = int(0.9 * len(all_train_docs))  # 90/10 split
-
     train_docs = all_train_docs[:split_idx]     # 90% training
     dev_docs = all_train_docs[split_idx:]       # 10% dev/validation
 
-    # --- Use DEV set for evaluation during training ---
-    evaluation_dataset_name_to_docs = {
-        "DEV": dev_docs
-    }
-
-    # fine_tuning_args.restore_model_path = "fine_tuned_models/merged_fine_tune/f1_0.5714/model.pt"
+    evaluation_dataset_name_to_docs = {"DEV": dev_docs}
 
     # --- Run training ---
     start_fine_tuning_task(
