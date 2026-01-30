@@ -1,3 +1,5 @@
-company_name,location,country,moto
+company,location,country,moto
 Acme Corp,Paris,France,Innovative solutions
-Globex Inc,Berlin,Germany,Quality products
+#Globex Inc,Berlin,Germany,Quality products
+#Apple,Cupertino,USA,Think different
+#McDonald's,Chicago,USA,I'm lovin' it
