@@ -19,19 +19,8 @@ python -m venv .venv
 - nb! make sure python version is 3.8, if not do `python3.8` or ``python3.9``
 
 ### 2. Activate virtual environment (recommended)
-- **Bash / WSL / macOS**
 ```bash
 source .venv/bin/activate
-```
-
-- **Windows (Command Prompt)**
-```cmd
-.venv\Scripts\activate.bat
-```
-
-- ***Windows (Powershell)***
-```powershell
-.venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
