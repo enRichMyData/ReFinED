@@ -35,29 +35,13 @@ source .venv/bin/activate
 ```
 
 ### 3. Install dependencies
-For editing code:
 ```bash
 pip install -e .
 ```
-For general usage:
-```bash
-pip install .
-```
 
 ### 4. Set source-path
-- **Bash / WSL / macOS**
 ```bash
 export PYTHONPATH=$PYTHONPATH:src
-```
-
-- **Windows (Command Prompt)**
-```cmd
-set PYTHONPATH=%PYTHONPATH%;src
-```
-
-- **Windows (Powershell)**
-```powershell
-$env:PYTHONPATH += ";src"
 ```
 
 ### 5. Run!
