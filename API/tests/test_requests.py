@@ -5,7 +5,7 @@ import json
 BASE_URL = "http://127.0.0.1:8000"
 DATASET_NAME = "test_dataset"
 TABLE_NAME = "test_table"
-CSV_PATH = "test.csv"
+CSV_PATH = "../tables/test.csv"
 TARGET_COLUMN = "company"
 TOP_K = 3
 
