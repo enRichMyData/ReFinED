@@ -4,6 +4,33 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+
+class TableRequest(BaseModel):
+    data: List[dict] = Field(
+        ...,
+        description="A list of row objects. Example: [{'name': 'Norway', 'pop': '5M'}]"
+    )
+    target_column: str = Field(
+        ...,
+        description="The name of the column containing the text you want to link."
+    )
+    top_k: int = Field(
+        5,
+        ge=1,
+        description="Number of entity candidates to return per mention."
+    )
+    table_name: str = Field(
+        "table1",
+        description="A custom label for this table to help you find it later."
+    )
+
+class LinkRequest(BaseModel):
+    """
+    Used for "Link Single Text"
+    """
+    text: str = Field(..., example="James Cameron directed Titanic.")
+    top_k: int = 5
+
 # tracking progress
 class JobStatus(str, Enum):
     created = "created"     # 0

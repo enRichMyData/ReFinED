@@ -1,9 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import List, Dict
+from typing import List, Dict, Any
+import base64
 
 # models and services
-from app.schemas.models import JobStatus, JobStatusResponse, CellResult, Candidate
+from app.schemas.models import TableRequest, LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate
 from app.services.job_service import JobService, JOBS
 from app.config import settings
 from my_tests.utility.test_utils import load_model
@@ -11,33 +12,19 @@ from my_tests.utility.test_utils import load_model
 
 # router for the API, and ReFined Model
 router = APIRouter()
-model = load_model(device=settings.MODEL_DEVICE)
-
-class TableRequest(BaseModel):
-    data: List[dict] = Field(
-        ...,
-        description="A list of row objects. Example: [{'name': 'Norway', 'pop': '5M'}]"
-    )
-    target_column: str = Field(
-        ...,
-        description="The name of the column containing the text you want to link."
-    )
-    top_k: int = Field(
-        5,
-        ge=1,
-        description="Number of entity candidates to return per mention."
-    )
-    table_name: str = Field(
-        "table1",
-        description="A custom label for this table to help you find it later."
-    )
+model = load_model(
+    device=settings.MODEL_DEVICE,
+    model="wikipedia_model_with_numbers",   # <-- can be tweaked (e.g. fine-tuned model)
+    entity_set="wikidata",                  # <-- can be tweaked
+    use_precomputed=True
+)
 
 
 # Category: Instant Analysis (Synchronous)
 # ============================================
 
 @router.post("/link", tags=["Analysis"])
-async def link_single_text(text: str, top_k: int = 5):
+async def link_single_text(request: LinkRequest):
     """
     ### Instant Entity Linking
     Submit a single string and get results immediately.
@@ -45,11 +32,11 @@ async def link_single_text(text: str, top_k: int = 5):
     **Note:** For large tables, use the /jobs endpoint instead.
     """
     try:
-        # Re-use the utility function used in the job service
+        # Re-uses utility function used in the job service
         from my_tests.utility.test_utils import run_refined_single
 
         # runs the entity linker
-        doc_spans_per_doc = run_refined_single([text], model)[0]
+        doc_spans_per_doc = run_refined_single([request.text], model)[0]
 
         results = []
         for span in doc_spans_per_doc:
@@ -61,7 +48,7 @@ async def link_single_text(text: str, top_k: int = 5):
                 "type": span.coarse_mention_type or "UNKNOWN"
             })
 
-        return {"text": text, "entities": results}
+        return {"text": request.text, "entities": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model error: {str(e)}")
 
@@ -120,7 +107,7 @@ async def get_job_status(job_id: str):
     )
 
 
-@router.get("/jobs/{job_id}/results", tags=["Jobs"], response_model=List[CellResult])
+@router.get("/jobs/{job_id}/results", tags=["Jobs"], response_model=Dict[str, Any])
 async def get_job_results(job_id: str):
     """
     ### Get Final Results
@@ -156,3 +143,50 @@ def list_tables():
         })
 
     return {"tables": tables}
+
+
+@router.get("/datasets", response_model=Dict[str, Any])
+async def list_datasets(
+        page: int = Query(1, ge=1, description="The page number (1-based)"),
+        page_size: int = Query(10, ge=1, le=100, description="Items per page")
+):
+    """
+    ### List Datasets
+    Uses a simple page numbering and sizes for pagination
+    """
+    # sort all jobs by newest
+    all_jobs = sorted(JOBS.values(), key=lambda x: x["created_at"], reverse=True)
+    total_count = len(all_jobs)
+    total_pages = (total_count + page_size - 1) // page_size
+
+    # calculation of start and end
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    # slice data
+    page_items = all_jobs[start:end]
+
+    # build pagination links
+    next_page = f"/datasets?page={page + 1}&page_size={page_size}" if end < total_count else None
+    prev_page = f"/datasets?page={page - 1}&page_size={page_size}" if page > 1 else None
+
+    # transform jobs to koala
+    datasets = []
+    for job in page_items:
+        datasets.append({
+            "dataset_name": job.get("table_name", job.get("target_column", "Untitled Job")),
+            "total_tables": 1,
+            "total_rows": job.get("total_rows", 0),
+            "created_at": job["created_at"].isoformat()
+        })
+
+    return {
+        "data": datasets,
+        "total": total_count,
+        "page": page,
+        "total_pages": total_pages,
+        "pagination": {
+            "next": next_page,
+            "previous": prev_page
+        }
+    }
