@@ -1,4 +1,3 @@
-# main.py
 import logging
 import uuid
 from fastapi import FastAPI, Request

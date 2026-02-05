@@ -2,10 +2,9 @@ import uuid
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List
-import pandas as pd
 
 # imported models
-from my_tests.utility.test_utils import run_refined_single # ReFinED EL model
+from app.utility.model_loader import run_refined_single
 from app.schemas.models import JobStatus, CellResult, Candidate, CandidateType # internal class/models
 
 # logging.basicConfig(level=logging.INFO)

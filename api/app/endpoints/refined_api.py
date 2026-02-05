@@ -1,13 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any
-import base64
+from typing import Dict, Any
 
 # models and services
 from app.schemas.models import TableRequest, LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate
+from app.utility.model_loader import load_model, run_refined_single
 from app.services.job_service import JobService, JOBS
 from app.config import settings
-from my_tests.utility.test_utils import load_model
 
 
 # router for the API, and ReFined Model
@@ -32,9 +30,6 @@ async def link_single_text(request: LinkRequest):
     **Note:** For large tables, use the /jobs endpoint instead.
     """
     try:
-        # Re-uses utility function used in the job service
-        from my_tests.utility.test_utils import run_refined_single
-
         # runs the entity linker
         doc_spans_per_doc = run_refined_single([request.text], model)[0]
 
@@ -190,3 +185,22 @@ async def list_datasets(
             "previous": prev_page
         }
     }
+
+
+
+
+# async def get_missing_descriptions(entity_ids: list):
+#     # This calls your local LamAPI running on port 8000
+#     endpoint = "http://localhost:8000/lookup/entity-retrieval"
+#
+#     # We ask LamAPI for specific IDs rather than searching for names
+#     payload = {
+#         "indices": ["items"],
+#         "key": entity_ids,  # List of IDs like ["Q28865", "Q312"]
+#         "token": "lamapi_demo_2023"
+#     }
+#
+#     import httpx
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(endpoint, json=payload)
+#         return response.json()
