@@ -1,74 +1,45 @@
 # ReFinED
 ---
 
-## 📌 New – Instructions
+## Setup & API Instructions (new)
 
-# ⚠️ Compatibility Notice
+### Compatibility Notice
+* **Primary support:** Python 3.8 (tested on 3.8.20)
+* **Secondary support:** Python 3.9-slim (Confirmed working for API deployment)
+* **Core:** `torch==1.12.1` | `transformers==4.2.2`
 
-This project requires **Python 3.8**.  
-Update: works on **Python 3.9.21** using `torch==1.12.1+cpu`.
+---
 
-The latest tested working version of the **`transformers`** library is **4.29.2**,  
-since newer releases require Python 3.9+.
+### 1. Manual Setup (Local Development)
+Ideal for testing scripts in the `my_tests` or `example_scripts` folders.
 
-### 1. Create virtual environment (recommended)
-- **Linux / macOS / WSL** / Windows (cmd / powershell)
 ```bash
-python -m venv .venv
-```
-- nb! make sure python version is 3.8, if not do `python3.8` or ``python3.9``
-
-### 2. Activate virtual environment (recommended)
-- **Bash / WSL / macOS**
-```bash
+# 1. Create and activate environment
+python3 -m venv .venv
 source .venv/bin/activate
-```
 
-- **Windows (Command Prompt)**
-```cmd
-.venv\Scripts\activate.bat
-```
-
-- ***Windows (Powershell)***
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 3. Install dependencies
-For editing code:
-```bash
+# 2. Install dependencies
 pip install -e .
+
+# 3. Configure Paths (required for local execution) (for both model and api)
+export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/src:$(pwd)/api
 ```
-For general usage:
+
+### 2. Docker & API Usage (Recommended)
+This project includes a **FastAPI** wrapper designed for high-performance entity linking with background task support.
+
+#### Quick start
 ```bash
-pip install .
+# Build and start docker with GPU support and model caching
+docker compose up --build
 ```
 
-### 4. Set source-path
-- **Bash / WSL / macOS**
-```bash
-export PYTHONPATH=$PYTHONPATH:src
-```
+* **API Base URL:** `http://localhost:8002`
+* **Interactive Docs:** `/docs`
+* **Background Jobs:** Use `/jobs` for large t able processing
 
-- **Windows (Command Prompt)**
-```cmd
-set PYTHONPATH=%PYTHONPATH%;src
-```
+**Note:** For detailed API documentation, endpoint schemas, and examples, see the api/README.md
 
-- **Windows (Powershell)**
-```powershell
-$env:PYTHONPATH += ";src"
-```
-
-### 5. Run!
-```bash
-python my_tests/run_refined.py
-```
-
-### Deactivate virtual environment
-```bash
-deactivate
-```
 ---
 
 ## Quickstart
