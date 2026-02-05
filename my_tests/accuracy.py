@@ -126,7 +126,7 @@ def evaluate_refined(refined, input_file):
 
 def main():
     # ------- CONFIG -------
-    LINE_LIMIT = None          # number of lines to process, None for no limit
+    LINE_LIMIT = 5          # number of lines to process, None for no limit
     TEST_DIR = "my_tests"
     DEFAULT_DATA_FOLDER = f"{TEST_DIR}/data"   # location of data-files
 

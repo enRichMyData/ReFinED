@@ -1,0 +1,32 @@
+#  Big uncessary files and folders
+.venv/
+venv/
+fine_tuned_models/
+Dataset.zip
+fine_tuned_models.zip
+*.zip
+*.tar.gz
+
+# Python Clutter
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Development Tools & IDEs
+.idea/
+.vscode/
+*.iml
+.git/
+.gitignore
+docker-compose.yml
+Dockerfile
+
+# Logs & OS Trash
+*.log
+.DS_Store
+Thumbs.db
