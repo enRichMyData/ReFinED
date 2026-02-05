@@ -1,0 +1,22 @@
+services:
+  refined_api:
+    container_name: refined_api
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./api:/app/api
+      - ./src:/app/src
+      - refined_cache:/root/.cache/refined  # caches model weights
+    # for usage of nvidia GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+volumes:
+    refined_cache:
