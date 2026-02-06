@@ -1,7 +1,19 @@
 # ReFinED
 ---
 
-## Setup & API Instructions (new)
+> **Fork Notice**
+>
+> This repository is a **research and experimentation fork** of
+> [amazon-science/ReFinED](https://github.com/amazon-science/ReFinED).
+>
+> The additions above the *Quickstart* section (API setup, Docker usage,
+> benchmarking, and refactoring notes) are **not part of the official ReFinED
+> release** and are provided for research, testing, and reproducibility only.
+>
+> For the authoritative implementation, models, and documentation,
+> please refer to the original repository.
+
+## Setup & API Instructions
 
 ### Compatibility Notice
 * **Primary support:** Python 3.8 (tested on 3.8.20)
