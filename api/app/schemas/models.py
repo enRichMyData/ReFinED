@@ -39,6 +39,33 @@ class JobCreateRequest(BaseModel):
     total_rows: Optional[int] = Field(default=None, ge=0)
     table_name: Optional[str] = None
 
+    # visual example for API docs
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "mode": "inline",
+                    "header": ["entity_name", "category", "context"],
+                    "rows": [
+                        {
+                            "entity_name": "Jaguar",
+                            "category": "Animal",
+                            "context": "The jaguar is a large cat species native to the Americas."
+                        },
+                        {
+                            "entity_name": "Jaguar",
+                            "category": "Vehicle",
+                            "context": "The car was speeding on the highway.",
+                        }
+                    ],
+                    "link_columns": ["entity_name"],
+                    "table_name": "Disambiguation Test",
+                    "top_k": 5
+                }
+            ]
+        }
+    }
+
 class JobIngestInfo(BaseModel):
     expected_parts: Optional[int] = None
     expected_rows: Optional[int] = None
