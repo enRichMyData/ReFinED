@@ -28,8 +28,8 @@ It is designed to process tables and text strings, transforming them into **Koal
   **(multi part upload WIP)**
 
 
-* **Koala-UI Compatibility**: Output JSON is pre-formatted to match the requirements of the Koala-UI frontend.
-
+* **Koala-UI Compatibility**: Output JSON is pre-formatted to match the requirements of the
+  [Koala-UI frontend](https://github.com/enRichMyData/koala_ui).
 
 * **Device Adaptive**: Supports both **GPU (CUDA)** for high-speed inference and **CPU** (with optimized autocast) for accessibility.
 
