@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # models and services
-from app.schemas.models import TableRequest, LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate
+from app.schemas.models import LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate, ResultsPage, JobCancelResponse, JobCreateRequest, RowCells
 from app.utility.model_loader import load_model, run_refined_single
 from app.services.job_service import JobService, JOBS
 from app.config import settings
@@ -51,7 +51,7 @@ async def link_single_text(request: LinkRequest):
 # Category: Jobs: creating + status
 # ======================================
 @router.post("/jobs", status_code=202, tags=["Jobs"])
-async def create_job(request: TableRequest, background_tasks: BackgroundTasks):
+async def create_job(request: JobCreateRequest, background_tasks: BackgroundTasks):
     """
     **Submit a table for Entity Linking**
 
@@ -62,62 +62,138 @@ async def create_job(request: TableRequest, background_tasks: BackgroundTasks):
 
     **Returns:** A 'job_id' used to track and fetch status/results
     """
-    header = list(request.data[0].keys()) if request.data else []
+    header = request.header
+
+    refined_rows = []
+    if request.rows:
+        for row in request.rows:
+            if isinstance(row, RowCells):
+                refined_rows.append(dict(zip(header, row.cells)))
+            elif isinstance(row, dict):
+                refined_rows.append(row)
+
+    # link columns (like crocodile)
+    target_col = request.link_columns[0] if request.link_columns else ""
 
     # create job for current request
     job_id = JobService.create_job(
         header=header,
-        rows=request.data,
-        target_column=request.target_column,
+        rows=refined_rows,
+        target_column=target_col,
         top_k=request.top_k
     )
 
     # stores table name as metadata for identification
-    JOBS[job_id]["table_name"] = request.table_name
+    if request.table_name:
+        JOBS[job_id]["table_name"] = request.table_name
 
     # offloads ReFinED entity linking execution to a background task
     background_tasks.add_task(JobService.run_refined_task, job_id, model)
-    return {"job_id": job_id, "status": "queued"}
+
+    return {
+        "job_id": job_id,
+        "status": JobStatus.queued,
+        "mode": request.mode,
+        "message": "Job accepted"
+    }
 
 
 @router.get("/jobs/{job_id}", tags=["Jobs"], response_model=JobStatusResponse)
 async def get_job_status(job_id: str):
     """
     ### Check Job Status
-    Use this to see if your job is still 'running' or has 'completed'.
+    Returns the current state of the ReFinED task, including progress percentages.
     """
     job = JOBS.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
     return JobStatusResponse(
-        job_id=job_id,
+        job_id=job["job_id"],
         status=job["status"],
+        mode=job.get("mode", "inline"),
         created_at=job["created_at"],
-        updated_at=job.get("updated_at", job["created_at"]),
-        progress={
-            "row_index": job.get("current_row", 0),
-            "total_rows": job.get("total_rows", 0)
-        }
+        updated_at=job["updated_at"],
+        config_hash=job.get("config_hash", ""), # no config hash used in refined (yet?)
+        ingest=job.get("ingest", {}),
+        progress=job.get("progress", {}),
+        results=job.get("results", {}),
+        error=job.get("error")
     )
 
+@router.post("/jobs/{job_id}:cancel", response_model=JobCancelResponse, tags=["Jobs"])
+async def cancel_job(job_id: str):
+    """
+    ### Cancel a Job
+    If a job is still in progress (not completed), you can cancel it to free up resources.
+    """
+    job = JobService.cancel_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
 
-@router.get("/jobs/{job_id}/results", tags=["Jobs"], response_model=Dict[str, Any])
-async def get_job_results(job_id: str):
+    return JobCancelResponse(
+        job_id=job["job_id"],
+        status=JobStatus.cancelled,
+        message="Job cancelled successfully"
+    )
+
+@router.get("/jobs/{job_id}/results", tags=["Jobs"], response_model=ResultsPage)
+async def get_job_results(
+        job_id: str,
+        cursor: Optional[str] = Query(None),
+        limit: int = Query(100)
+):
     """
     ### Get Final Results
     Once the status of a job is 'completed', use this endpoint to fetch the full linked data in the Koala JSON format.
     """
     job = JOBS.get(job_id)
 
+    # 404 check
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    # uses jobstatus
+    # status check
     if job["status"] != JobStatus.done:
         raise HTTPException(status_code=400, detail=f"Job not completed yet. Current status {job['status']}")
 
-    return job["result"]
+    # flattens koala format to a list of cellresults
+    all_cell_results = []
+    header = job["result"]["header"]
+
+    for row_idx, row in enumerate(job["result"]["rows"]):
+        for entity in row["linked_entities"]:
+            col_idx = entity["idColumn"]
+
+            # uses header for human-readable column name (e.g. country instead of 1)
+            # column_name = header[col_idx] if col_idx < len(header) else str(col_idx)
+
+            # create cellresult
+            cell = CellResult(
+                row=row_idx,
+                col=col_idx,                    # crocodile uses col_idx, for readability, can use "column_name"
+                cell_id=f"{row_idx}:{col_idx}",
+                mention=row["data"][col_idx],
+                candidate_ranking=entity["candidates"]
+            )
+            all_cell_results.append(cell)
+
+    # pagination
+    try:
+        start = int(cursor) if (cursor and  cursor.isdigit()) else 0
+    except (ValueError, TypeError):
+        start = 0
+    end = start + limit
+    page_items = all_cell_results[start:end]
+    next_cursor = str(end) if end < len(all_cell_results) else None
+
+    return ResultsPage(
+        ok=True,
+        job_id=job_id,
+        cursor=cursor,
+        next_cursor=next_cursor,
+        results=page_items
+    )
 
 
 # Category: Datasets (sort of from the "old" API)
@@ -130,17 +206,17 @@ def list_tables():
     Returns a summary of all EL jobs currently in memory
     """
     tables = []
-    for j_id, j in JOBS.items():
+    for job_id, job in JOBS.items():
         tables.append({
-            "job_id": j_id,
-            "table_name": j.get("table_name", "untitled"),
-            "status": j["status"]  # This will now return "created", "running", etc.
+            "job_id": job_id,
+            "table_name": job.get("table_name", "untitled"),
+            "status": job["status"]
         })
 
     return {"tables": tables}
 
 
-@router.get("/datasets", response_model=Dict[str, Any])
+@router.get("/datasets", response_model=Dict[str, Any], tags=["Datasets"])
 async def list_datasets(
         page: int = Query(1, ge=1, description="The page number (1-based)"),
         page_size: int = Query(10, ge=1, le=100, description="Items per page")
@@ -189,18 +265,3 @@ async def list_datasets(
 
 
 
-# async def get_missing_descriptions(entity_ids: list):
-#     # This calls your local LamAPI running on port 8000
-#     endpoint = "http://localhost:8000/lookup/entity-retrieval"
-#
-#     # We ask LamAPI for specific IDs rather than searching for names
-#     payload = {
-#         "indices": ["items"],
-#         "key": entity_ids,  # List of IDs like ["Q28865", "Q312"]
-#         "token": "lamapi_demo_2023"
-#     }
-#
-#     import httpx
-#     async with httpx.AsyncClient() as client:
-#         response = await client.post(endpoint, json=payload)
-#         return response.json()

@@ -1,15 +1,13 @@
 import uuid
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # imported models
 from app.utility.model_loader import run_refined_single
-from app.schemas.models import JobStatus, CellResult, Candidate, CandidateType # internal class/models
+from app.schemas.models import JobStatus, CellResult, Candidate, CandidateType
 
-# logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
 
 # internal "database" for jobs
 JOBS: Dict[str, Dict[str, Any]] = {}
@@ -24,21 +22,50 @@ class JobService:
             top_k: int
     ):
         job_id = str(uuid.uuid4())
+        now = datetime.now()
+
         JOBS[job_id] = {
             "job_id": job_id,
-            "status": JobStatus.created,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
+            "status": JobStatus.queued,
+            "mode": "inline",
+            "created_at": now,
+            "updated_at": now,
+            "config_hash": "",  # no config hash used in refined
             "header": header,
             "target_column": target_column,
             "top_k": top_k,
             "rows": rows,
-            "result": None,
+            "ingest": {
+                "expected_parts": 1,
+                "expected_rows": len(rows),
+                "received_parts": 1,
+                "received_rows": len(rows),
+                "completed_at": None
+            },
+            "progress": {
+                "part_number": 0,   # parts not implemented yet
+                "row_index": 0,
+                "total_rows": len(rows),
+            },
+            "results": {        # for crocodile similarity
+                "segments": 0,
+                "cells": 0
+            },
+            "result": None,     # where refined API stores the data
             "error": None,
-            "current_row": 0,
-            "total_rows": len(rows)
         }
         return job_id
+
+    @staticmethod
+    def cancel_job(job_id: str) -> Optional[Dict[str, Any]]:
+        job = JOBS.get(job_id)
+        if not job:
+            return None
+
+        now = datetime.now()
+        job["status"] = JobStatus.cancelled
+        job["updated_at"] = now
+        return job
 
     @staticmethod
     async def run_refined_task(job_id: str, model):
@@ -49,36 +76,31 @@ class JobService:
         try:
             logger.info(f"Job {job_id}: Starting ReFinED processing")
 
+            # updates status to running
             job["status"] = JobStatus.running
-            job["updated_at"] = datetime.now(timezone.utc)
+            job["updated_at"] = datetime.now()
 
             # extracts data
             header = job["header"]
             target_column = job["target_column"]
             target_col_idx = header.index(target_column)
             top_k = job["top_k"]
-
-            # Progression tracking
             raw_rows = job["rows"]
-            job["total_rows"] = len(raw_rows)
-            job["current_row"] = 0
 
             koala_rows = []
-
             coarse_counts = {}
-            fine_counts = {}
 
             # Go through data rows and process, linking entities found
             for idx, row_dict in enumerate(raw_rows):
 
                 # check for cancellation
-                if job["status"] == JobStatus.cancelled:
+                if job.get("status") == JobStatus.cancelled:
                     logger.info(f"Job {job_id}: Cancelled by user")
                     return
 
                 # updates progress
-                job["current_row"] = int(idx) + 1
-                job["updated_at"] = datetime.now(timezone.utc)
+                job["progress"]["row_index"] = idx + 1   #TODO <-----
+                job["updated_at"] = datetime.now()
 
                 # extract mention
                 mention = str(row_dict.get(target_column, ""))
@@ -121,7 +143,7 @@ class JobService:
                                 description=getattr(candidate, "description", ""),
                                 types=[CandidateType(id=span_type, name=span_type)] if is_match else []
                             )
-                            candidates_for_cell.append(candidate_obj.model_dump())
+                            candidates_for_cell.append(candidate_obj)
                     else:
                         # if candidate does not exist, we add a "null candidate"
                         null_candidate = Candidate(
@@ -132,7 +154,7 @@ class JobService:
                             description="No candidates found by ReFinED",
                             types=[CandidateType(id="UNKNOWN", name="UNKNOWN")]
                         )
-                        candidates_for_cell.append(null_candidate.model_dump())
+                        candidates_for_cell.append(null_candidate)
 
                 # 3. format koala row
                 row_data_values = [str(row_dict.get(h, "")) for h in header]
@@ -148,16 +170,23 @@ class JobService:
                 })
 
             # Metadata processing
-            # 1. gets most frequent coarse type
+            # gets most frequent coarse type
             most_frequent_coarse = max(coarse_counts, key=coarse_counts.get) if coarse_counts else "OTHER"
 
-            # 2. basic LIT detection
+            # basic LIT detection
             lit_map = {}
             for i, h in enumerate(header):
                 if i == target_col_idx: continue
                 if "year" in h.lower() or "date" in h.lower():
                     lit_map[str(i)] = "DATE"
 
+            # update metadata similar to crocodile
+            now_done = datetime.now()
+            job["results"]["segments"] = 1
+            job["results"]["cells"] = len(koala_rows)
+            job["ingest"]["completed_at"] = now_done
+
+            # stores results in job "database"
             job["result"] = {
                 "header": header,
                 "rows": koala_rows,
@@ -169,19 +198,21 @@ class JobService:
                 "column_types": {
                     str(target_col_idx): {
                         "types": [
-                            {"id": most_frequent_coarse, "name": most_frequent_coarse, "count": len(koala_rows)}
+                            {
+                                "id": most_frequent_coarse,
+                                "name": most_frequent_coarse,
+                                "count": len(koala_rows)}
                         ]
                     }
                 }
             }
 
             job["status"] = JobStatus.done
-            job["updated_at"] = datetime.now(timezone.utc)
+            job["updated_at"] = now_done
             logger.info(f"Job {job_id}: Completed successfully")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {str(e)}")
             job["status"] = JobStatus.failed
             job["error"] = str(e)
-            job["updated_at"] = datetime.now(timezone.utc)
-
+            job["updated_at"] = datetime.now()
