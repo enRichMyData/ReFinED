@@ -6,6 +6,25 @@ It is designed to process tables and text strings, transforming them into **Koal
 
 ---
 
+### Model & Resource Requirements
+
+To ensure high speed and accuracy for tables, it is configured with the following:
+
+* **Model**: `wikipedia_model_with_numbers` — Optimized for tables containing dates and quantities.
+* **Entity Set**: `wikidata` — Provides wide coverage (~33M entities) beyond standard Wikipedia.
+* **Pre-computed Embeddings**: `use_precomputed=True`.
+    * **Fast Inference**: Uses a local vector index for instant entity lookups.
+    * **Hardware**: highly recommended having at least **32GB RAM** and an **SSD**.
+
+---
+
+### Troubleshooting & Tuning
+* **Slow Startup**: The first load can take a short while, as the model maps the Wikidata index.
+* **Memory Issues**: If you experience crashes (OOM), set `use_precomputed=False` or switch to `entity_set="wikipedia"` to reduce the memory usage.
+* **Docker Users**: Ensure Docker is allowed sufficient memory to run with docker, should ideally be **28GB of RAM** in Settings > Resources.
+
+---
+
 ### Folder Structure
 * **`app/endpoints/`**: API route definitions for single linking, background jobs, and dataset listing.
 
