@@ -21,7 +21,7 @@ To ensure high speed and accuracy for tables, it is configured with the followin
 ### Troubleshooting & Tuning
 * **Slow Startup**: The first load can take a short while, as the model maps the Wikidata index.
 * **Memory Issues**: If you experience crashes (OOM), set `use_precomputed=False` or switch to `entity_set="wikipedia"` to reduce the memory usage.
-* **Docker Users**: Ensure Docker is allowed sufficient memory to run with docker, should ideally be **28GB of RAM** in Settings > Resources.
+* **Docker Users**: Ensure Docker is allowed sufficient memory to run with docker, should ideally be around **28GB of RAM**.
 
 ---
 
