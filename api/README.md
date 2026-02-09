@@ -6,60 +6,50 @@ It is designed to process tables and text strings, transforming them into **Koal
 
 ---
 
-### Model & Resource Requirements
+### Ecosystem Compatibility
 
-To ensure high speed and accuracy for tables, it is configured with the following:
+This API is designed to be **interchangeable with [Crocodile](https://github.com/enRichMyData/crocodile)**. 
 
-* **Model**: `wikipedia_model_with_numbers` — Optimized for tables containing dates and quantities.
-* **Entity Set**: `wikidata` — Provides wide coverage (~33M entities) beyond standard Wikipedia.
-* **Pre-computed Embeddings**: `use_precomputed=True`.
-    * **Fast Inference**: Uses a local vector index for instant entity lookups.
-    * **Hardware**: highly recommended having at least **32GB RAM** and an **SSD**.
+* **Interface Alignment**: The endpoints, request schemas, and response structures are modeled after Crocodile.
+* **Seamless Exchange**: This service can replace Crocodile in existing pipelines, allowing users to upgrade to ReFinED's neural entity linking without changing integration logic.
+* **Multipart Support**: Fully implements chunked upload logic for large-scale data ingestion.
+
+#### API Endpoint Mapping
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/jobs` | `POST` | Initialize a job (Inline or Multipart) |
+| `/jobs/{id}` | `GET` | Poll job status and metadata |
+| `/jobs/{id}/parts` | `POST` | Upload data chunks (Multipart mode) |
+| `/jobs/{id}/finalize`| `POST` | Signal end of upload and trigger AI processing |
+| `/jobs/{id}/results` | `GET` | Retrieve Koala-formatted results |
+| `/jobs/{id}/cancel`  | `POST` | Terminate a running or queued job |
 
 ---
 
-### Troubleshooting & Tuning
-* **Slow Startup**: The first load can take a short while, as the model maps the Wikidata index.
-* **Memory Issues**: If you experience crashes (OOM), set `use_precomputed=False` or switch to `entity_set="wikipedia"` to reduce the memory usage.
-* **Docker Users**: Ensure Docker is allowed sufficient memory to run with docker, should ideally be around **28GB of RAM**.
-
----
-
-### Folder Structure
-* **`app/endpoints/`**: API route definitions for single linking, background jobs, and dataset listing.
+### Job Lifecycle
+To ensure compatibility with the Koala-UI state machine, jobs transition through the following states:
 
 
-* **`app/services/`**: The `JobService` logic for handling background tasks and in-memory job storage.
 
-
-* **`app/utility/`**: Core model loading logic (`load_model`) and inference wrappers.
- 
-
-* **`app/schemas/`**: Pydantic models for data validation and Koala-format alignment.
- 
-
-* **`app/main.py`**: The API entry point, middleware configuration, and health checks.
+1.  **Ingesting**: (Multipart only) Accepting data chunks.
+2.  **Queued**: Data received; waiting for the model worker.
+3.  **Running**: Model is actively performing entity linking.
+4.  **Done**: Results are ready for retrieval.
+5.  **Error/Cancelled**: Terminal states for failed or aborted jobs.
 
 ---
 
 ### Key Features
-* **Background Jobs**: Submit large tables via `/jobs` to avoid timeouts. The model processes rows in the background while you poll for progress.
-  **(multi part upload WIP)**
-
-
-* **Koala-UI Compatibility**: Output JSON is pre-formatted to match the requirements of the
-  [Koala-UI frontend](https://github.com/enRichMyData/koala_ui).
-
-* **Device Adaptive**: Supports both **GPU (CUDA)** for high-speed inference and **CPU** (with optimized autocast) for accessibility.
-
-
-* **Interactive Docs**: Auto-generated Swagger UI available at the root URL (`/`) for real-time testing.
+* **Background Jobs**: Processes rows asynchronously to prevent HTTP timeouts on large tables.
+* **Koala-UI Compatibility**: Output JSON matches the requirements of the [Koala-UI frontend](https://github.com/enRichMyData/koala_ui).
+* **Device Adaptive**: Supports **GPU (CUDA)** and **CPU** (with optimized autocast).
+* **CORS Enabled**: Configured to allow requests from frontend services (e.g., Koala-UI) out of the box.
 
 ---
 
-### Quick Start
-
-**Run with Docker (recommended):**
-From the project root:
-```bash
-docker compose up --build
+### Folder Structure
+* **`app/endpoints/`**: API route definitions for linking, jobs, and dataset listing.
+* **`app/services/`**: The `JobService` logic for state management and background tasks.
+* **`app/utility/`**: Model loading (`load_model`) and inference wrappers.
+* **`app/schemas/`**: Pydantic models for Koala-format validation.
+* **`app/main.py`**: API entry point and middleware configuration.
