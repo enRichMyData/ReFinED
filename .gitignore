@@ -68,5 +68,4 @@ Thumbs.db
 # Security and Environment
 .env
 .env.local
-.env.*
-!.env.example
+.env
