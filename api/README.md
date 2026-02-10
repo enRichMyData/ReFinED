@@ -1,7 +1,10 @@
 # ReFinED API Service
 
-This folder contains the **FastAPI** backend for the ReFinED entity linking model. 
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![CUDA](https://img.shields.io/badge/CUDA-76B900?style=flat&logo=nvidia)](https://developer.nvidia.com/cuda-zone)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
+This folder contains the **FastAPI** backend for the ReFinED entity linking model.
 It is designed to process tables and text strings, transforming them into **Koala-UI** compatible JSON.
 
 ---
@@ -28,8 +31,6 @@ This API is designed to be **interchangeable with [Crocodile](https://github.com
 
 ### Job Lifecycle
 To ensure compatibility with the Koala-UI state machine, jobs transition through the following states:
-
-
 
 1.  **Ingesting**: (Multipart only) Accepting data chunks.
 2.  **Queued**: Data received; waiting for the model worker.
