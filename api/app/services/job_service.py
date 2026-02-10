@@ -35,7 +35,7 @@ class JobService:
             "header": header,
             "target_column": target_column,
             "top_k": top_k,
-            "rows": rows,        # previously "rows": rows
+            "rows": rows,        # for inline flow, all rows are stored here. for multipart, rows are stored in parts_buffer until finalization
             "parts_buffer": {},  # for multipart flow, not currently used in refined
             "ingest": {
                 "expected_parts": 1,

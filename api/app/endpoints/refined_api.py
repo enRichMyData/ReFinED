@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Depends
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -6,11 +6,12 @@ from datetime import datetime
 from app.schemas.models import LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate, ResultsPage, JobCancelResponse, JobCreateRequest, RowCells, JobPartUploadRequest, JobFinalizeRequest
 from app.utility.model_loader import load_model, run_refined_single
 from app.services.job_service import JobService, JOBS
+from app.utility.security import get_api_key
 from app.config import settings
 
 
 # router for the API, and ReFined Model
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 model = load_model(
     device=settings.MODEL_DEVICE,
     model="wikipedia_model_with_numbers",   # <-- can be tweaked (e.g. fine-tuned model)

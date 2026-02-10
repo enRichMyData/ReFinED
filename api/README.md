@@ -54,3 +54,22 @@ To ensure compatibility with the Koala-UI state machine, jobs transition through
 * **`app/utility/`**: Model initialization and inference wrappers for both real and mock engines.
 * **`app/schemas/`**: Pydantic models in `models.py` ensuring Koala/Crocodile format compliance.
 * **`app/main.py`**: API entry point and global configuration setup.
+
+## Authentication
+The API is secured via an **API Key**. All requests must include this key in the header to be authorized.
+
+* **Header Name**: `X-API-Key`
+* **Default Key**: Defined in your `.env` file via the `API_KEY` variable.
+
+---
+
+## Configuration & Environment Setup
+
+The application uses `pydantic-settings` to manage configuration. It automatically looks for a `.env` file in the project root to override default settings.
+
+### 1. Create a local environment file
+We use a `.env` file to store sensitive information and configuration parameters. Do **not** commit this file to version control.
+
+```bash
+cp .env.template .env
+```

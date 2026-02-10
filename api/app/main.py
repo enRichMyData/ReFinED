@@ -1,9 +1,12 @@
 import logging
 import uuid
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.config import settings
 from app.endpoints.refined_api import router as refined_router
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
