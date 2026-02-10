@@ -31,11 +31,12 @@ class JobService:
             "mode": "inline",
             "created_at": now,
             "updated_at": now,
-            "config_hash": "",  # no config hash used in refined
+            "config_hash": "",   # no config hash used in refined
             "header": header,
             "target_column": target_column,
             "top_k": top_k,
-            "rows": [],  # previously "rows": rows
+            "rows": rows,        # previously "rows": rows
+            "parts_buffer": {},  # for multipart flow, not currently used in refined
             "ingest": {
                 "expected_parts": 1,
                 "expected_rows": len(rows),
@@ -124,6 +125,11 @@ class JobService:
 
                 # 1. runs the entity linking (using ReFinED)
                 doc_spans_per_doc = run_refined_single([mention], model)[0]
+
+                #TODO DEBUG LOGGING
+                logger.info(f"Found {len(doc_spans_per_doc)} spans for '{mention}'")
+                if not doc_spans_per_doc:
+                    logger.warning(f"ReFinED found no entities in: {mention}")
 
                 # 2. extract candidates
                 candidates_for_cell = []

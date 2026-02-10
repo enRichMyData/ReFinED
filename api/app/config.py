@@ -7,6 +7,6 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     MODEL_DEVICE: str = "cpu"
     FASTAPI_SERVER_PORT: int = 8002
-    MOCK_MODE: bool = True
+    MOCK_MODE: bool = False
 
 settings = Settings()

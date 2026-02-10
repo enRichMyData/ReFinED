@@ -7,7 +7,7 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - MOCK_MODE=true
+      - MOCK_MODE=false
       - MODEL_DEVICE=cpu
     volumes:
       - ./api:/app/api
