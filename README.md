@@ -42,7 +42,10 @@ This project includes a **FastAPI** wrapper designed for high-performance entity
 
 #### Quick start
 ```bash
-# Build and start docker with GPU support and model caching
+# 1. Setup your environment configuration
+cp api/.env.template api/.env
+
+# 2. Build and start with GPU support and model caching
 docker compose up --build
 ```
 
