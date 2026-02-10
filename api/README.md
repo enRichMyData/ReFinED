@@ -48,8 +48,9 @@ To ensure compatibility with the Koala-UI state machine, jobs transition through
 ---
 
 ### Folder Structure
-* **`app/endpoints/`**: API route definitions for linking, jobs, and dataset listing.
-* **`app/services/`**: The `JobService` logic for state management and background tasks.
-* **`app/utility/`**: Model loading (`load_model`) and inference wrappers.
-* **`app/schemas/`**: Pydantic models for Koala-format validation.
-* **`app/main.py`**: API entry point and middleware configuration.
+
+* **`app/endpoints/`**: API routes for linking, background jobs, and dataset listing (`refined_api.py`).
+* **`app/services/`**: Job lifecycle logic, state management, and the background worker (`job_service.py`).
+* **`app/utility/`**: Model initialization and inference wrappers for both real and mock engines.
+* **`app/schemas/`**: Pydantic models in `models.py` ensuring Koala/Crocodile format compliance.
+* **`app/main.py`**: API entry point and global configuration setup.
