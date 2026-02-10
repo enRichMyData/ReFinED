@@ -6,41 +6,51 @@ It is designed to process tables and text strings, transforming them into **Koal
 
 ---
 
-### Folder Structure
-* **`app/endpoints/`**: API route definitions for single linking, background jobs, and dataset listing.
+### Ecosystem Compatibility
+
+This API is designed to be **interchangeable with [Crocodile](https://github.com/enRichMyData/crocodile)**. 
+
+* **Interface Alignment**: The endpoints, request schemas, and response structures are modeled after Crocodile.
+* **Seamless Exchange**: This service can replace Crocodile in existing pipelines, allowing users to upgrade to ReFinED's neural entity linking without changing integration logic.
+* **Multipart Support**: Fully implements chunked upload logic for large-scale data ingestion.
+
+#### API Endpoint Mapping
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/jobs` | `POST` | Initialize a job (Inline or Multipart) |
+| `/jobs/{id}` | `GET` | Poll job status and metadata |
+| `/jobs/{id}/parts` | `POST` | Upload data chunks (Multipart mode) |
+| `/jobs/{id}/finalize`| `POST` | Signal end of upload and trigger AI processing |
+| `/jobs/{id}/results` | `GET` | Retrieve Koala-formatted results |
+| `/jobs/{id}/cancel`  | `POST` | Terminate a running or queued job |
+
+---
+
+### Job Lifecycle
+To ensure compatibility with the Koala-UI state machine, jobs transition through the following states:
 
 
-* **`app/services/`**: The `JobService` logic for handling background tasks and in-memory job storage.
 
-
-* **`app/utility/`**: Core model loading logic (`load_model`) and inference wrappers.
- 
-
-* **`app/schemas/`**: Pydantic models for data validation and Koala-format alignment.
- 
-
-* **`app/main.py`**: The API entry point, middleware configuration, and health checks.
+1.  **Ingesting**: (Multipart only) Accepting data chunks.
+2.  **Queued**: Data received; waiting for the model worker.
+3.  **Running**: Model is actively performing entity linking.
+4.  **Done**: Results are ready for retrieval.
+5.  **Error/Cancelled**: Terminal states for failed or aborted jobs.
 
 ---
 
 ### Key Features
-* **Background Jobs**: Submit large tables via `/jobs` to avoid timeouts. The model processes rows in the background while you poll for progress.
-  **(multi part upload WIP)**
-
-
-* **Koala-UI Compatibility**: Output JSON is pre-formatted to match the requirements of the Koala-UI frontend.
-
-
-* **Device Adaptive**: Supports both **GPU (CUDA)** for high-speed inference and **CPU** (with optimized autocast) for accessibility.
-
-
-* **Interactive Docs**: Auto-generated Swagger UI available at the root URL (`/`) for real-time testing.
+* **Background Jobs**: Processes rows asynchronously to prevent HTTP timeouts on large tables.
+* **Koala-UI Compatibility**: Output JSON matches the requirements of the [Koala-UI frontend](https://github.com/enRichMyData/koala_ui).
+* **Device Adaptive**: Supports **GPU (CUDA)** and **CPU** (with optimized autocast).
+* **CORS Enabled**: Configured to allow requests from frontend services (e.g., Koala-UI) out of the box.
 
 ---
 
-### Quick Start
+### Folder Structure
 
-**Run with Docker (recommended):**
-From the project root:
-```bash
-docker compose up --build
+* **`app/endpoints/`**: API routes for linking, background jobs, and dataset listing (`refined_api.py`).
+* **`app/services/`**: Job lifecycle logic, state management, and the background worker (`job_service.py`).
+* **`app/utility/`**: Model initialization and inference wrappers for both real and mock engines.
+* **`app/schemas/`**: Pydantic models in `models.py` ensuring Koala/Crocodile format compliance.
+* **`app/main.py`**: API entry point and global configuration setup.

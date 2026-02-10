@@ -18,8 +18,8 @@
 ### Compatibility Notice
 * **Primary support:** Python 3.8 (tested on 3.8.20)
 * **Secondary support:** Python 3.9-slim (Confirmed working for API deployment)
-* **Core:** `torch==1.12.1` | `transformers==4.2.2`
-
+* **Dependency Constraints:** Requires `transformers==4.2.2`. Newer versions are currently unsupported as they introduce breaking changes to the model loading logic.
+  
 ---
 
 ### 1. Manual Setup (Local Development)
@@ -52,6 +52,18 @@ docker compose up --build
 
 **Note:** For detailed API documentation, endpoint schemas, and examples, see the api/README.md
 
+---
+
+### 3. Additional Fork Notes
+
+#### Benchmarking
+Current benchmarking is conducted through specialized test scripts located in the `my_tests/` directory. These tests evaluate the core ReFinED implementation's accuracy and performance on specific datasets. By running these standalone Python scripts, we can verify model behavior and entity linking quality independently of the API layer, ensuring that the underlying research logic remains performant across different hardware configurations.
+
+#### Refactoring Notes
+Refactoring efforts in this fork have been strictly isolated to the **infrastructure and API layer**:
+* **Source Code Preservation:** The core ReFinED logic within `src/` has been left untouched to ensure research results remain consistent with the original implementation.
+* **Architecture:** Enhancements focus on wrapping the model as a service, implementing a state-machine for multipart uploads, and standardizing JSON output formats to be Koala-compliant for easier downstream data consumption.
+  
 ---
 
 ## Quickstart
