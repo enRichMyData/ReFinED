@@ -109,6 +109,14 @@ class JobCancelResponse(BaseModel):
     status: JobStatus
     message: str
 
+class JobPartUploadRequest(BaseModel):
+    part_number: int
+    rows: List[RowCells]
+
+class JobFinalizeRequest(BaseModel):
+    total_parts: Optional[int] = None
+    total_rows: Optional[int] = None
+
 # Entity metadata
 class CandidateType(BaseModel):
     id: str

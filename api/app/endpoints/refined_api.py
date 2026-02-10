@@ -1,8 +1,9 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 # models and services
-from app.schemas.models import LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate, ResultsPage, JobCancelResponse, JobCreateRequest, RowCells
+from app.schemas.models import LinkRequest, JobStatus, JobStatusResponse, CellResult, Candidate, ResultsPage, JobCancelResponse, JobCreateRequest, RowCells, JobPartUploadRequest, JobFinalizeRequest
 from app.utility.model_loader import load_model, run_refined_single
 from app.services.job_service import JobService, JOBS
 from app.config import settings
@@ -63,6 +64,10 @@ async def create_job(request: JobCreateRequest, background_tasks: BackgroundTask
     **Returns:** A 'job_id' used to track and fetch status/results
     """
     header = request.header
+    mode = request.mode or "inline"
+
+    # link columns (like crocodile)
+    target_col = request.link_columns[0] if request.link_columns else ""
 
     refined_rows = []
     if request.rows:
@@ -72,8 +77,6 @@ async def create_job(request: JobCreateRequest, background_tasks: BackgroundTask
             elif isinstance(row, dict):
                 refined_rows.append(row)
 
-    # link columns (like crocodile)
-    target_col = request.link_columns[0] if request.link_columns else ""
 
     # create job for current request
     job_id = JobService.create_job(
@@ -84,19 +87,83 @@ async def create_job(request: JobCreateRequest, background_tasks: BackgroundTask
     )
 
     # stores table name as metadata for identification
+    job = JOBS[job_id]
+    job["mode"] = mode
     if request.table_name:
         JOBS[job_id]["table_name"] = request.table_name
 
-    # offloads ReFinED entity linking execution to a background task
-    background_tasks.add_task(JobService.run_refined_task, job_id, model)
+    # distinguish between modes
+    if mode == "inline":
+        job["status"] = JobStatus.queued
+        background_tasks.add_task(JobService.run_refined_task, job_id, model)
+        return {
+            "job_id": job_id,
+            "status": JobStatus.queued,
+            "mode": "inline",
+            "message": "Job accepted"
+        }
+    else:
+        # flow for multi-part upload
+        job["status"] = "ingesting"
+        job["ingest"]["expected_parts"] = request.total_parts or 0
+        job["ingest"]["expected_rows"] = request.total_rows or 0
+
+        return {
+            "job_id": job_id,
+            "status": "ingesting",
+            "mode": "multipart",
+            "message": "Multipart job created",
+            "upload": {
+                "upload_parts_url": f"/jobs/{job_id}/parts",
+                "finalized_url": f"/jobs/{job_id}/finalize"
+            }
+        }
+
+@router.post("/jobs/{job_id}/parts", tags=["Jobs"])
+async def upload_job_part(job_id: str, request: JobPartUploadRequest):
+    """
+    ### Upload Part
+    Append a batch of rows to a multipart job.
+    """
+    job = JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # uses the header stored when job was created to map cells to keys
+    header = job["header"]
+    refined_rows = [dict(zip(header, row.cells)) for row in request.rows]
+
+    # calls service method to append rows
+    JobService.add_part(job_id, request.part_number, refined_rows)
 
     return {
         "job_id": job_id,
-        "status": JobStatus.queued,
-        "mode": request.mode,
-        "message": "Job accepted"
+        "part_number": request.part_number,
+        "received_rows": len(refined_rows),
+        "status": "ingesting"
     }
 
+@router.post("/jobs/{job_id}/finalize", tags=["Jobs"])
+async def finalize_job(job_id: str, background_tasks: BackgroundTasks):
+    """
+    ### Finalize Job
+    Moves job from 'ingesting' to 'queued' and starts the background task.
+    """
+    job = JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # update job status
+    job["status"] = JobStatus.queued
+    job["ingest"]["completed_at"] = datetime.now()
+
+    # starts the background task
+    background_tasks.add_task(JobService.run_refined_task, job_id, model)
+    return {
+        "job_id": job_id,
+        "status": JobStatus.queued,
+        "message": "Processing started"
+    }
 
 @router.get("/jobs/{job_id}", tags=["Jobs"], response_model=JobStatusResponse)
 async def get_job_status(job_id: str):

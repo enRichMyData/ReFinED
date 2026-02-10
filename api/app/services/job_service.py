@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # imported models
+from app.config import settings
 from app.utility.model_loader import run_refined_single
 from app.schemas.models import JobStatus, CellResult, Candidate, CandidateType
 
@@ -34,7 +35,7 @@ class JobService:
             "header": header,
             "target_column": target_column,
             "top_k": top_k,
-            "rows": rows,
+            "rows": [],  # previously "rows": rows
             "ingest": {
                 "expected_parts": 1,
                 "expected_rows": len(rows),
@@ -43,11 +44,12 @@ class JobService:
                 "completed_at": None
             },
             "progress": {
-                "part_number": 0,   # parts not implemented yet
+                "part_number": 0,
                 "row_index": 0,
                 "total_rows": len(rows),
             },
-            "results": {        # for crocodile similarity
+            # for crocodile similarity
+            "results": {
                 "segments": 0,
                 "cells": 0
             },
@@ -55,6 +57,21 @@ class JobService:
             "error": None,
         }
         return job_id
+
+    @staticmethod
+    def add_part(job_id: int, part_number: int, rows: List[dict]):
+        job = JOBS.get(job_id)
+        if not job:
+            return None
+
+        #TODO part_number not currently used
+        # this assumes a sequential flow, 1st part -> 2nd part -> 3rd part ...
+
+        job["rows"].extend(rows)
+        job["ingest"]["received_parts"] += 1
+        job["ingest"]["received_rows"] += len(rows)
+        job["updated_at"] = datetime.now()
+        return job
 
     @staticmethod
     def cancel_job(job_id: str) -> Optional[Dict[str, Any]]:

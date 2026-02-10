@@ -6,6 +6,9 @@ services:
       dockerfile: api/Dockerfile
     ports:
       - "8002:8002"
+    environment:
+      - MOCK_MODE=true
+      - MODEL_DEVICE=cpu
     volumes:
       - ./api:/app/api
       - ./src:/app/src

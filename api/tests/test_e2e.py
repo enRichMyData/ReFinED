@@ -7,6 +7,8 @@ BASE_URL = "http://localhost:8002"
 TIMEOUT_LIMIT = 60  # ReFinED can take a few seconds to initialize
 
 
+# QUICK TEST FROM GEMINI !!
+
 def run_test():
     print("🚀 Starting ReFinED (Crocodile-Compatible) Test...")
     print("-" * 50)

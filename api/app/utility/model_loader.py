@@ -1,6 +1,6 @@
 import torch
-import warnings
-from refined.inference.processor import Refined
+from app.config import settings
+from app.utility.mock_engine import MockModel
 
 
 def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="wikidata", use_precomputed=False):
@@ -16,6 +16,11 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
     # model = "fine_tuned_models/movies_full/f1_0.9237" # fine tuned med 100% av treningsdata fra companies.csv
     # model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
 
+    #TODO: mock mode for testing without full model
+    if settings.MOCK_MODE:
+        print("MOCK MODE: Skipping 30GB+ model load for pc stability")
+        return MockModel()
+
     # GPU/CPU selection
     device = "cuda" if device == "gpu" else "cpu"
     if device == "cpu":
@@ -23,6 +28,9 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
         warnings.filterwarnings("ignore", message="In CPU autocast, but the target dtype is not supported.*")
         original_autocast = torch.amp.autocast
         torch.amp.autocast = lambda *args, **kwargs: original_autocast(device_type="cpu", dtype=torch.float32)
+
+    # import if needed
+    from refined.inference.processor import Refined
 
     # ReFinED: Loading model
     return Refined.from_pretrained(
