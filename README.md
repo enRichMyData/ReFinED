@@ -38,7 +38,8 @@ export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/src:$(pwd)/api
 ```
 
 ### 2. Docker & API Usage (Recommended)
-This project includes a **FastAPI** wrapper designed for high-performance entity linking with background task support.
+The main addition to this forked project includes a **FastAPI** wrapper designed for high-performance entity linking with background task support.
+This, as well as further documentation, is in the `/api` folder.
 
 #### Quick start
 ```bash
