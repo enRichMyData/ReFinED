@@ -48,9 +48,12 @@ cp api/.env.template api/.env
 
 # 2. Build and start with GPU support and model caching
 docker compose up --build
+
+# 3. (Optional) expose API on a different host port
+API_PORT=9000 docker compose up --build
 ```
 
-* **API Base URL:** `http://localhost:8002`
+* **API Base URL (default):** `http://localhost:8002`
 * **Interactive Docs:** `/docs`
 * **Background Jobs:** Use `/jobs` for large t able processing
 

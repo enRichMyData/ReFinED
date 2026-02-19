@@ -5,7 +5,8 @@ services:
       context: .
       dockerfile: api/Dockerfile
     ports:
-      - "8002:8002"
+      # Override host port with API_PORT, e.g. API_PORT=9000 docker compose up --build
+      - "${API_PORT:-8002}:8002"
     env_file:
       - ./api/.env
     volumes:
