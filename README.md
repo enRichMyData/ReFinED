@@ -44,7 +44,7 @@ This, as well as further documentation, is in the `/api` folder.
 #### Quick start
 ```bash
 # 1. Setup your environment configuration
-cp api/.env.template api/.env
+cp .env.template .env
 
 # 2. Build and start with GPU support and model caching
 docker compose up --build

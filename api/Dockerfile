@@ -27,4 +27,4 @@ ENV PYTHONPATH="/app/api:/app/src"
 EXPOSE 8002
 
 # run from app directory
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--app-dir", "api"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${FASTAPI_SERVER_PORT:-8002} --app-dir api"]

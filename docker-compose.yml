@@ -5,10 +5,13 @@ services:
       context: .
       dockerfile: api/Dockerfile
     ports:
-      # Override host port with API_PORT, e.g. API_PORT=9000 docker compose up --build
+      # Host port is configurable; container listens on service default 8002
       - "${API_PORT:-8002}:8002"
-    env_file:
-      - ./api/.env
+    environment:
+      API_KEY: "${API_KEY:-your-super-secret-key}"
+      MODEL_DEVICE: "${MODEL_DEVICE:-cpu}"
+      DEBUG: "${DEBUG:-False}"
+      MOCK_MODE: "${MOCK_MODE:-False}"
     volumes:
       - ./api:/app/api
       - ./src:/app/src

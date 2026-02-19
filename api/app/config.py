@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
-# finds absolute env path
+# Prefer repository-root .env (Compose standard); keep api/.env as fallback.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-env_path = os.path.join(project_root, ".env")
+api_root = os.path.dirname(current_dir)
+repo_root = os.path.dirname(api_root)
+env_candidates = [
+    os.path.join(repo_root, ".env"),
+    os.path.join(api_root, ".env"),
+]
+env_path = next((path for path in env_candidates if os.path.exists(path)), env_candidates[0])
 
 
 class Settings(BaseSettings):

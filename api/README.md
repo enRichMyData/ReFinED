@@ -66,9 +66,10 @@ The API is secured via an **API Key**. All requests must include this key in the
 
 ## Configuration & Environment Setup
 
-The application uses `pydantic-settings` to manage configuration. It automatically looks for a `.env` file in the project root to override default settings.
+The application uses `pydantic-settings` to manage configuration.
+For Docker Compose usage, the standard configuration file is the repository-root `.env`.
 
-### 1. Create a local environment file
+### 1. Create a local environment file (from repository root)
 We use a `.env` file to store sensitive information and configuration parameters. Do **not** commit this file to version control.
 
 ```bash
