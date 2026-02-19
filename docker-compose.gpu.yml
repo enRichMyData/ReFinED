@@ -1,0 +1,11 @@
+services:
+  refined_api:
+    environment:
+      MODEL_DEVICE: "${MODEL_DEVICE:-cuda}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

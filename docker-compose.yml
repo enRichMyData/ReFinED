@@ -16,13 +16,5 @@ services:
       - ./api:/app/api
       - ./src:/app/src
       - refined_cache:/root/.cache/refined  # caches model weights
-    # for usage of nvidia GPU
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 volumes:
     refined_cache:

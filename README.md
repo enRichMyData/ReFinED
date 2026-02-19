@@ -46,11 +46,14 @@ This, as well as further documentation, is in the `/api` folder.
 # 1. Setup your environment configuration
 cp .env.template .env
 
-# 2. Build and start with GPU support and model caching
+# 2. Build and start (CPU-safe default)
 docker compose up --build
 
 # 3. (Optional) expose API on a different host port
 API_PORT=9000 docker compose up --build
+
+# 4. (Optional) run with NVIDIA GPU support
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build
 ```
 
 * **API Base URL (default):** `http://localhost:8002`
