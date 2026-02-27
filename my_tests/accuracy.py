@@ -26,31 +26,41 @@ def measure_accuracy(pred_spans, truths, verbose=False):
         if not truth_qids: continue
         total += 1
 
-        #TODO This assumes only one (main) entity per text!
-        # only consider the _first_ entity, i.e. company/movie
         pred_qid = getattr(pred_span[0].predicted_entity, "wikidata_entity_id", None) if pred_span else None
+        pred_qid = pred_qid if pred_qid is not None else "NIL"
+        # when model returns no entity, its treated as "NIL" rather than None
+        # if GT also is NIL, it is treated as TP instead of ignored
 
-        # true positive and false negative
+        # match logic
+        is_match = False
         if pred_qid in truth_qids:
+            is_match = True
+        elif pred_qid == "NIL" and "NIL" in truth_qids:
+            is_match = True
+
+        # true positive
+        if is_match:
             tp += 1
+
+        # false negative
         else:
             fn += 1
 
-        # false positives
-        if pred_qid is not None and pred_qid not in truth_qids:
+        # false positive
+        if pred_qid != "NIL" and pred_qid not in truth_qids:
             fp += 1
 
         if verbose:
             truth_display = str(truth_qids)
             if len(truth_display) > 30:
                 truth_display = truth_display[:27] + "...]"
-            match_color = bcolors.OKCYAN if pred_qid in truth_qids else bcolors.FAIL
+            match_color = bcolors.OKCYAN if is_match else bcolors.FAIL
             print(
-                f"[{i+1:>3}] "
-                f"Pred: {pred_qid or 'None':<12} "
+                f"[{i + 1:>3}] "
+                f"Pred: {pred_qid:<12} "
                 f"Truth: {truth_display:<35} "
                 f"{match_color}"
-                f"Match: {str(pred_qid in truth_qids):<5}"
+                f"Match: {str(is_match):<5}"
                 f"{bcolors.ENDC} "
                 f"({pred_qid})"
             )
