@@ -207,8 +207,8 @@ def run_eval_generic(
 
     # --- stats ---
     print(f"Total Targets in CSV: {total_targets:,}")
-    print(f"NIL Targets (Expected): {nil_targets:,} ({(nil_targets / total_targets) * 100:.1f}%)")
     print(f"Linkable Targets: {(total_targets - nil_targets):,}")
+    print(f"NIL Targets (Expected): {nil_targets:,} ({(nil_targets / total_targets) * 100:.1f}%)")
 
     table_to_truths = {t: df for t, df in merged.groupby("table")}
 
@@ -220,11 +220,80 @@ def run_eval_generic(
     run_refined_eval(model, texts, truths, batch_size, verbose, sample_size)
 
 
+def run_eval_specialized(
+        model,
+        dataset_name: str,
+        batch_size: int = 8,
+        prediction_mode: str = "cell",
+        verbose: bool = True,
+        sample_size: int = None
+):
+    print(f"[{datetime.now():%H:%M:%S}] Starting Specialized Processing: '{dataset_name}' ...")
+
+    # path setup
+    base_path = f"{DATA_FOLDER}/{dataset_name}"
+
+    # map filename based on directory
+    if dataset_name == "SN":
+        gt_file = f"{base_path}/SN_gt.csv"
+        table_file = f"{base_path}/SN_test.csv"
+        table_name = "SN_test"
+
+    elif dataset_name == "movies":
+        gt_file = f"{base_path}/el_movies_gt_wikidata.csv"
+        table_file = f"{base_path}/movies_test.csv"
+        table_name = "movies_test"
+
+    elif dataset_name == "companies":
+        gt_file = f"{base_path}/el_companies_gt_wikidata.csv"
+        table_file = f"{base_path}/companies_test.csv"
+        table_name = "companies_test"
+
+    else:
+        raise ValueError(f"Unknown specialized dataset: '{dataset_name}'")
+
+    # load ground truth with header, rename to standard column names
+    gt = pd.read_csv(gt_file, header=0)
+    gt = gt.rename(columns={
+        "tableName": "table",
+        "idRow": "row",
+        "idCol": "col",
+        "entity": "qid"
+    })
+
+    # filter test split only (movies/companies share GT with train data)
+    gt = gt[gt["table"] == table_name].copy()
+    gt["row"] = gt["row"].astype(int)
+    gt["col"] = gt["col"].astype(int)
+
+    # offset row by 1 due to table CSV having header
+    gt["row"] = gt["row"] + 1
+
+    # stats
+    total_targets = len(gt)
+    nil_targets = gt["qid"].apply(
+        lambda v: pd.isna(v) or str(v).strip().lower() in ["nan", "nil", "none", ""]
+    ).sum()
+
+    print(f"Total Targets: {total_targets:,}")
+    print(f"NIL Targets: {nil_targets:,} ({(nil_targets / total_targets) * 100:.1f}%)")
+    print(f"Linkable Targets: {(total_targets - nil_targets):,}")
+
+    # build table_to_truths - only one table in these cases (test csv)
+    table_to_truths = {table_name: gt}
+
+    # build samples
+    texts, truths = build_eval_samples(table_to_truths, base_path, prediction_mode)
+
+    print(f"[{datetime.now():%H:%M:%S}] Finished processing: '{dataset_name}'")
+    run_refined_eval(model, texts, truths, batch_size, verbose, sample_size)
+
+
 if __name__ == "__main__":
 
     device = "gpu"
     sample_size = 1000
-    modes = ["cell"] # + "row"
+    modes = ["cell", "row"] # + "row"
 
     model = "wikipedia_model_with_numbers"
     refined_model = load_model(device=device, entity_set="wikidata", model=model, use_precomputed=False)
@@ -237,6 +306,46 @@ if __name__ == "__main__":
 
             # prints environment info
             print_environment_info(device=device, batch=True, batch_size=batch)
+
+            # ==== Specialized Datasets ====
+
+            # Companies
+            print(bolden(f"\n\n{'#' * 15} [ Companies ] {'#' * 15}"))
+            run_eval_specialized(
+                model=refined_model,
+                dataset_name="companies",
+                batch_size=batch,
+                prediction_mode=prediction_mode,
+                verbose=False,
+                sample_size=sample_size
+            )
+
+            # NOTE !
+            # 'movies' dataset is HIGHLY affected by 'cell' vs 'row' prediction, with 'row' giving MUCH better result
+
+            # Movies
+            print(bolden(f"\n\n{'#' * 15} [ Movies ] {'#' * 15}"))
+            run_eval_specialized(
+                model=refined_model,
+                dataset_name="movies",
+                batch_size=batch,
+                prediction_mode=prediction_mode,
+                verbose=False,
+                sample_size=sample_size
+            )
+
+            # Spend Network (SN)
+            print(bolden(f"\n\n{'#'*15} [ Spend Network (SN) ] {'#'*15}"))
+            run_eval_specialized(
+                model=refined_model,
+                dataset_name="SN",
+                batch_size=batch,
+                prediction_mode=prediction_mode,
+                verbose=False,
+                sample_size=sample_size
+            )
+
+            # === SemTab Datasets ===
 
             # Round1_T2D
             print(bolden(f"\n\n{'#'*15} [ Round1_T2D ] {'#'*15}"))
