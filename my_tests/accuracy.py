@@ -3,7 +3,7 @@ from my_tests.utility.test_utils import (
     run_refined_single,
     run_refined_batch,
     bolden,
-    bcolors,
+    EvalMetrics
 )
 from refined.evaluation.evaluation import get_datasets_obj, evaluate    # built-in eval
 from my_tests.utility.testing_args import parse_args                    # CLI
@@ -82,7 +82,11 @@ def measure_accuracy(pred_spans, truths, verbose=False):
     # print(f"No. Gold:  {len(truths)}")
     print("==============================\n")
 
-    return accuracy, precision, recall, f1
+    # metrics wrapper
+    return EvalMetrics(
+        accuracy=accuracy, precision=precision, recall=recall,
+        f1=f1, tp=tp, fp=fp, fn=fn
+    )
 
 
 def log_evaluation(data_folder, accuracy, metrics, input_file, batch_size, gpu):

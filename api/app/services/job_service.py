@@ -117,19 +117,18 @@ class JobService:
                     return
 
                 # updates progress
-                job["progress"]["row_index"] = idx + 1   #TODO <-----
+                job["progress"]["row_index"] = idx + 1
                 job["updated_at"] = datetime.now()
 
                 # extract mention
                 mention = str(row_dict.get(target_column, ""))
 
+                # TODO <-- enable for "row context" mode API
+                # most often more accurate, requires more computation
+                # mention = " ".join([str(val) for val in row_dict.values()])
+
                 # 1. runs the entity linking (using ReFinED)
                 doc_spans_per_doc = run_refined_single([mention], model)[0]
-
-                #TODO DEBUG LOGGING
-                logger.info(f"Found {len(doc_spans_per_doc)} spans for '{mention}'")
-                if not doc_spans_per_doc:
-                    logger.warning(f"ReFinED found no entities in: {mention}")
 
                 # 2. extract candidates
                 candidates_for_cell = []

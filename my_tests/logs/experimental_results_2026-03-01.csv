@@ -1,0 +1,17 @@
+timestamp,dataset,mode,model,batch_size,total_rows_in_gt,n_samples_tested,nil_count,tp,fp,fn,accuracy,precision,recall,f1_score,peak_vram_gb,throughput_s,total_time_s
+
+--- STARTING MODE: CELL ---
+
+
+--- Mode: cell | Batch Size: 8 ---
+
+2026-03-01 06:50:57,companies,cell,wikipedia_model_with_numbers,8,1000,1000,0,726,85,274,0.7260,0.8952,0.7260,0.8018,1.13,308.75,3.24
+2026-03-01 06:51:00,movies,cell,wikipedia_model_with_numbers,8,1000,1000,0,488,195,512,0.4880,0.7145,0.4880,0.5799,1.15,362.15,2.76
+2026-03-01 06:51:02,SN,cell,wikipedia_model_with_numbers,8,1000,1000,229,415,99,585,0.4150,0.8074,0.4150,0.5482,1.13,411.80,2.43
+2026-03-01 06:51:06,Round1_T2D,cell,wikipedia_model_with_numbers,8,8418,1000,339,616,150,384,0.6160,0.8042,0.6160,0.6976,1.15,379.32,2.64
+2026-03-01 06:51:54,Round3_2019,cell,wikipedia_model_with_numbers,8,406827,1000,16370,508,197,492,0.5080,0.7206,0.5080,0.5959,1.14,424.05,2.36
+2026-03-01 06:56:22,Round4_2020,cell,wikipedia_model_with_numbers,8,1662165,1000,667244,496,137,504,0.4960,0.7836,0.4960,0.6075,1.14,243.40,4.11
+2026-03-01 06:56:36,2T_Round4,cell,wikipedia_model_with_numbers,8,667244,1000,3588,464,132,536,0.4640,0.7785,0.4640,0.5815,1.14,249.12,4.01
+2026-03-01 06:56:41,HTR1,cell,wikipedia_model_with_numbers,8,1406,1000,0,455,185,545,0.4550,0.7109,0.4550,0.5549,1.12,235.70,4.24
+2026-03-01 06:56:47,HTR2,cell,wikipedia_model_with_numbers,8,1983,1000,0,301,232,699,0.3010,0.5647,0.3010,0.3927,1.14,253.62,3.94
+2026-03-01 06:57:16,HardTablesR2,cell,wikipedia_model_with_numbers,8,47440,1000,0,454,166,546,0.4540,0.7323,0.4540,0.5605,1.17,262.81,3.81

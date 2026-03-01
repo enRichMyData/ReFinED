@@ -1,6 +1,11 @@
 from refined.inference.processor import Refined
 import torch
 
+# logging
+import os
+import csv
+from datetime import datetime
+
 
 class bcolors:
     OKBLUE = '\033[94m'
@@ -30,6 +35,94 @@ def blue_info(text: str):
     return bcolors.OKBLUE + bcolors.BOLD + text + bcolors.ENDC
 #-----------------------------------------------
 
+
+
+# ------------------ logging ------------------
+from dataclasses import dataclass
+
+@dataclass
+class DatasetMetadata:
+    total_targets: int
+    nil_count: int
+    sample_size: int   # len(texts)
+
+@dataclass
+class EvalMetrics:
+    accuracy: float
+    precision: float
+    recall: float
+    f1: float
+    tp:  int
+    fp: int
+    fn: int
+
+def get_dated_filename():
+    """Generates a filename with the current date and time for logging."""
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    return f"my_tests/logs/experimental_results_{date_str}.csv"
+
+def add_log_divider(message=""):
+    """Adds a visual separator row to the CSV log."""
+    log_file = get_dated_filename()
+    file_exists = os.path.isfile(log_file)
+
+    with open(log_file, mode='a', newline='') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            header = [
+                "timestamp", "dataset", "mode", "model", "batch_size",
+                "total_rows_in_gt", "n_samples_tested", "nil_count",
+                "tp", "fp", "fn",
+                "accuracy", "precision", "recall", "f1_score",
+                "peak_vram_gb", "throughput_s", "total_time_s"
+            ]
+            writer.writerow(header)
+
+    with open(log_file, mode='a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([])
+        writer.writerow([f"--- {message} ---"])
+        writer.writerow([])
+
+
+def log_results_to_csv(model_name, dataset_name, mode, batch_size,
+                       metrics: EvalMetrics, performance, meta: DatasetMetadata):
+    log_file = get_dated_filename()
+
+    # Define header
+    header = [
+        "timestamp", "dataset", "mode", "model", "batch_size",
+        "total_rows_in_gt", "n_samples_tested", "nil_count",
+        "tp", "fp", "fn",
+        "accuracy", "precision", "recall", "f1_score",
+        "peak_vram_gb", "throughput_s", "total_time_s"
+    ]
+
+    write_header = not os.path.exists(log_file) or os.stat(log_file).st_size == 0
+
+    row = [
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        # dataset info
+        dataset_name, mode, model_name, batch_size,
+        meta.total_targets, meta.sample_size, meta.nil_count,
+        # prediction metrics
+        metrics.tp, metrics.fp, metrics.fn,
+        f"{metrics.accuracy:.4f}", f"{metrics.precision:.4f}",
+        f"{metrics.recall:.4f}", f"{metrics.f1:.4f}",
+        # performance metrics
+        f"{performance['vram']:.2f}",
+        f"{performance['throughput']:.2f}",
+        f"{performance['time']:.2f}"
+    ]
+
+    with open(log_file, mode='a', newline='') as f:
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(header)
+        writer.writerow(row)
+
+    print(f"\033[92m[LOG]\033[0m Results saved to {log_file}")
+#-----------------------------------------------
 
 
 def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="wikidata", use_precomputed=False):
