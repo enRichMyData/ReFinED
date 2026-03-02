@@ -42,7 +42,8 @@ def print_environment_info(device, batch, batch_size):
 
     if batch: 
         print(blue_info("Using Batched mode"))
-        print(blue_info(f"Batch size: {batch_size}"))
+        if batch_size:
+            print(blue_info(f"Batch size: {batch_size}"))
     print("\n")
 
 def manual_timing(texts, model, run_fn, batch_size):

@@ -61,6 +61,7 @@ def get_dated_filename():
     date_str = datetime.now().strftime("%Y-%m-%d")
     return f"my_tests/logs/experimental_results_{date_str}.csv"
 
+
 def add_log_divider(message=""):
     """Adds a visual separator row to the CSV log."""
     log_file = get_dated_filename()
@@ -132,13 +133,13 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
     """
     # ==== model options so far ==== (must have downloaded!)
     # model = "wikipedia_model_with_numbers"
-    # model = "fine_tuned_models/merged_10k/f1_0.9229" # fine tuned med ~8% av treningsdata (5k hver)
-    # model = "fine_tuned_models/merged_60k/f1_0.9254" # fine tuned med ~44% av treningsdata (30k hver)
-    # model = "fine_tuned_models/companies_full/f1_0.8711" # fine tuned med 100% av treningsdata fra companies.csv
-    # model = "fine_tuned_models/movies_full/f1_0.9237" # fine tuned med 100% av treningsdata fra companies.csv
-    # model = "fine_tuned_models/merged_full/f1_0.8972" # fine tuned med 100% av treningsdata (fra begge)
+    # model = "fine_tuned_models/merged_10k/f1_0.9229"
+    # model = "fine_tuned_models/merged_60k/f1_0.9254"
+    # model = "fine_tuned_models/companies_full/f1_0.8711"
+    # model = "fine_tuned_models/movies_full/f1_0.9237"
+    # model = "fine_tuned_models/merged_full/f1_0.8972"
 
-    print(green_info(f"[INFO] Loading ReFinED model: ") 
+    print(green_info(f"[INFO] Loading ReFinED model: ")
           + cyan_info(f"'{model}'") 
           + green_info(", entity set: ") 
           + cyan_info(f"'{entity_set}'"))
@@ -150,6 +151,8 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
         import warnings
         warnings.filterwarnings("ignore", message="In CPU autocast, but the target dtype is not supported.*")
         original_autocast = torch.amp.autocast
+        # patch globally (not scoped) so autocast uses float32 during inference too,
+        # preventing BFloat16 errors in process_tensors
         torch.amp.autocast = lambda *args, **kwargs: original_autocast(device_type="cpu", dtype=torch.float32)
 
     # ReFinED: Loading model
@@ -161,9 +164,11 @@ def load_model(device=False, model="wikipedia_model_with_numbers", entity_set="w
         device=device  #    <--------- Decides to use 'cpu'  or 'gpu'
     )
 
+
 def run_refined_single(texts, model, unused_arg=None):
     """Process a list of texts through ReFinED."""
     return [model.process_text(t) for t in texts]
+
 
 def run_refined_batch(texts, model, batch_size: int = 16):
     """

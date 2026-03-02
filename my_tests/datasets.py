@@ -1,22 +1,23 @@
-from my_tests.accuracy import measure_accuracy
-from my_tests.benchmark import print_environment_info
-from my_tests.utility.test_utils import (
-    load_model, run_refined_batch,       # model
-    bolden,                              # style
-    log_results_to_csv, add_log_divider, # logging
-)
-# from my_tests.utility.data_loader import (
-#     load_dataset_config, build_eval_samples, get_dataset_metadata
-# )
-
-
-from my_tests.utility.test_utils import DatasetMetadata
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import torch.cuda
 import random
 import glob
 import time
+import csv
+import os
+
+# internal imports
+from my_tests.accuracy import measure_accuracy
+from my_tests.benchmark import print_environment_info
+from my_tests.utility.test_utils import (
+    load_model, run_refined_batch,       # model
+    bolden,                              # style
+    log_results_to_csv, add_log_divider, # logging 1
+    DatasetMetadata, get_dated_filename  # logging 2
+)
+
 
 DATA_FOLDER = "my_tests/data"
 
@@ -30,7 +31,32 @@ DATASET_FILES = {
 }
 
 
-# Dat loading
+def save_confidence_scores(spans, truths, dataset_name, prediction_mode):
+    """Saves per-sample confidence scores and correctness labels for PR curve analysis."""
+    conf_log_file = get_dated_filename().replace("experimental_results", "confidence_scores")
+
+    rows = []
+    for pred_spans, truth_qids in zip(spans, truths):
+        if not truth_qids:
+            continue
+        if pred_spans:
+            span = pred_spans[0]
+            conf = float(getattr(span, "entity_linking_model_confidence_score", 0.0) or 0.0)
+            pred_qid = getattr(span.predicted_entity, "wikidata_entity_id", "NIL") or "NIL"
+        else:
+            conf, pred_qid = 0.0, "NIL"
+        is_correct = int(pred_qid in truth_qids or (pred_qid == "NIL" and "NIL" in truth_qids))
+        rows.append([dataset_name, prediction_mode, conf, is_correct])
+
+    write_header = not os.path.exists(conf_log_file) or os.stat(conf_log_file).st_size == 0
+    with open(conf_log_file, mode='a', newline='') as f:
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(["dataset", "mode", "confidence", "is_correct"])
+        writer.writerows(rows)
+
+
+# Data loading
 # ===========================================================
 def clean_qids(val):
     """
@@ -90,6 +116,7 @@ def load_dataset_config(dataset_name):
 
     merged = targets.merge(gt, on=["table", "row", "col"], how="left")
     return f"{base}/tables", merged
+
 
 
 def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
@@ -168,7 +195,8 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
     print(f"[{prediction_mode.upper()}] "
           f"Matched {files_processed:,}/{total_files:,} tables | "
           f"Samples: {len(texts):,} | "
-          f"Time: {build_duration:.2f}s")
+          f"Time: {build_duration:.2f}s"
+          f"{' (non-table files skipped)' if files_processed < total_files else ''}")
 
     return texts, truths
 
@@ -180,7 +208,8 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
 def run_refined_eval(
     model, texts, truths, batch_size, dataset_name,
     prediction_mode, model_name, meta,
-    verbose=False, sample_size=None, seed=42
+    save_confidence=True, verbose=False,
+    sample_size=None, seed=42
 ):
     # 1. Optional sampling
     if sample_size and sample_size < len(texts):
@@ -199,6 +228,10 @@ def run_refined_eval(
     spans = run_refined_batch(texts, model, batch_size)
     infer_duration = time.perf_counter() - s_infer
 
+    # save confidence scores for PR curve analysis
+    if save_confidence:
+        save_confidence_scores(spans, truths, dataset_name, prediction_mode)
+
     # 3. Resource Metrics (VRAM & Speed)
     peak_vram = 0
     if torch.cuda.is_available():
@@ -211,34 +244,30 @@ def run_refined_eval(
         "time": infer_duration
     }
 
-    # speed, throughput
+    # speed, throughput, vram, batch info
     throughput = perf_data["throughput"]
     print(f"Inference time for {len(texts)} rows: {infer_duration:.2f}s")
     print(f"Throughput: {throughput:.2f} texts/sec")
     print(f"Peak VRAM usage: {peak_vram:.2f} GB")
+    print(f"Batch size: {batch_size}")
+    print(f"[{datetime.now():%H:%M:%S}] Finished running: '{dataset_name}'")
 
     # 4. Accuracy & Logging
     metrics = measure_accuracy(spans, truths, verbose)
 
     # logging
-    log_results_to_csv(
-        model_name=model_name,
-        dataset_name=dataset_name,
-        mode=prediction_mode,
-        batch_size=batch_size,
-        metrics=metrics,
-        performance=perf_data,
-        meta=meta
-    )
+    log_results_to_csv(model_name,  dataset_name, prediction_mode, batch_size, metrics, perf_data, meta)
 
 
 def run_eval(
         model,
         dataset_name,
         batch_size,
-        prediction_mode,
-        sample_size
+        prediction_mode="cell",
+        sample_size=None,
+        save_confidence=True
 ):
+    print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{dataset_name}' ...")
 
     # 1. Load configuration and data
     folder, gt_df = load_dataset_config(dataset_name)
@@ -252,20 +281,16 @@ def run_eval(
 
     # 4. Run the model and log results
     run_refined_eval(
-        model, texts, truths, batch_size,
-        dataset_name=dataset_name,
-        prediction_mode=prediction_mode,
-        model_name="wikipedia_model_with_numbers",
-        meta=meta,
-        sample_size=sample_size,
-        verbose=False
+        model, texts, truths, batch_size, dataset_name,
+        prediction_mode, "wikipedia_model_with_numbers", meta,
+        save_confidence, False, sample_size, False
     )
 
 
 if __name__ == "__main__":
     # Settings
-    BATCH_SIZES = [8]
-    MODES = ["cell", "row"]
+    BATCH_SIZES = [8, 16, 32, 64]
+    MODES = ["cell"] + ["row"]
     DATASETS = [
         # Specialized datasets
         ("companies", "special"),
@@ -283,20 +308,30 @@ if __name__ == "__main__":
         ("HardTablesR3", "generic")
     ]
 
-    sample_size = 1000
-    device = "gpu"
-    model_path = "wikipedia_model_with_numbers"
-    refined_model = load_model(device=device, entity_set="wikidata", model=model_path, use_precomputed=False)
 
+    sample_size = 1000
+    device = "cpu"
+    model = "wikipedia_model_with_numbers"
+    refined_model = load_model(device=device, entity_set="wikidata", model=model, use_precomputed=False)
+
+
+    # loop + environment
+    print_environment_info(device=device, batch=True, batch_size=None)
+
+    # === PREDICTION MODE SELECTION ===
     for mode in MODES:
         add_log_divider(f"STARTING MODE: {mode.upper()}")
 
+
+        # === BATCH SIZE SELECTION ===
         for batch in BATCH_SIZES:
             add_log_divider(f"Mode: {mode} | Batch Size: {batch}")
-            print_environment_info(device=device, batch=True, batch_size=batch)
+            print(bolden(f"\n\n\n{'=' * 20} BATCH SIZE: {batch} {'=' * 20}\n"))
 
+
+            # === DATASET SELECTION ===
             for i, (name, _) in enumerate(DATASETS, 1):
-                print(bolden(f"\n\n{'#' * 15} [ {i}/{len(DATASETS)}: {name} | {mode.upper()} ] {'#' * 15}"))
+                print(bolden(f"\n\n\n{'#' * 15} [ {i}/{len(DATASETS)}: {name} | {mode.upper()} ] {'#' * 15}"))
 
                 # unified call for both specialized and SemTab
                 run_eval(
@@ -304,7 +339,8 @@ if __name__ == "__main__":
                     dataset_name=name,
                     batch_size=batch,
                     prediction_mode=mode,
-                    sample_size=sample_size
+                    sample_size=sample_size,
+                    save_confidence=True       #TODO turn on after tuning runs
                 )
 
 #                 # OLD EVAL CALLS
