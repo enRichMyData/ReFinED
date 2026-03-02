@@ -17,6 +17,11 @@ botocore
 # used for data-preprocessing (in testing)
 pandas
 
+# used for evaluation visualization
+scikit-learn>=0.24.0
+matplotlib>=3.3.0
+
+
 # used for API
 fastapi>=0.100.0
 uvicorn>=0.23.0
