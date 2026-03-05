@@ -10,7 +10,8 @@ Test and evaluation suite for benchmarking ReFinED on SemTab and specialized ent
 |------|-------------|
 | `datasets.py` | Main evaluation runner. Loads datasets, runs ReFinED inference, logs results, and optionally saves per-sample confidence scores for PR curve analysis (`save_confidence=True`). Entry point for full benchmark runs. |
 | `accuracy.py` | Computes TP/FP/FN and evaluation metrics (accuracy, precision, recall, F1) from predicted spans and ground truth. |
-| `benchmark.py` | Prints environment info (GPU, batch size, etc.) before evaluation runs. Also contains a full standalone benchmarking suite with manual timing, peak memory profiling, cProfile profiling, and repeated run analysis. Originally used for early performance characterisation on CPU and GPU hardware. | `pr_curve.py` | Generates Precision-Recall and F1 vs Confidence Threshold figures by reading confidence scores saved by `datasets.py`. Does not require the model to run. Produces mode-specific figures for both cell and row prediction modes. |
+| `benchmark.py` | Prints environment info (GPU, batch size, etc.) before evaluation runs. Also contains a full standalone benchmarking suite with manual timing, peak memory profiling, cProfile profiling, and repeated run analysis. Originally used for early performance characterisation on CPU and GPU hardware. |
+| `pr_curve.py` | Generates Precision-Recall and F1 vs Confidence Threshold figures by reading confidence scores saved by `datasets.py`. Does not require the model to run. Produces mode-specific figures for both cell and row prediction modes. |
 | `run_refined.py` | Lightweight script for running ReFinED on a single input file via CLI. |
 | `sample_test.py` | Quick sanity check script for testing model output on a small set of examples. |
 | `log_analysis.py` | Reads and summarises dated CSV logs from evaluation runs, including per-mode breakdowns and best F1 per dataset. |
