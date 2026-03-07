@@ -261,6 +261,7 @@ def run_refined_eval(
 
 def run_eval(
         model,
+        model_name,
         dataset_name,
         batch_size,
         prediction_mode="cell",
@@ -283,7 +284,7 @@ def run_eval(
     # 4. Run the model and log results
     run_refined_eval(
         model, texts, truths, batch_size, dataset_name,
-        prediction_mode, "wikipedia_model_with_numbers", meta,
+        prediction_mode, model_name, meta,
         save_confidence, False, sample_size, seed
     )
 
@@ -312,22 +313,22 @@ if __name__ == "__main__":
 
     sample_size = 1000
     seed = 42
+    save_conf = True
     device = "cpu"
-    model = "wikipedia_model_with_numbers"
-    refined_model = load_model(device=device, entity_set="wikidata", model=model, use_precomputed=False)
-
+    model_name = "wikipedia_model_with_numbers"
+    refined_model = load_model(device=device, entity_set="wikidata", model=model_name, use_precomputed=False)
 
     # loop + environment
     print_environment_info(device=device, batch=True, batch_size=None)
 
     # === PREDICTION MODE SELECTION ===
     for mode in MODES:
-        add_log_divider(f"STARTING MODE: {mode.upper()}", model)
+        add_log_divider(f"STARTING MODE: {mode.upper()}", model_name)
 
 
         # === BATCH SIZE SELECTION ===
         for batch in BATCH_SIZES:
-            add_log_divider(f"Mode: {mode} | Batch Size: {batch}", model)
+            add_log_divider(f"Mode: {mode} | Batch Size: {batch}", model_name)
             print(bolden(f"\n\n\n{'=' * 20} BATCH SIZE: {batch} {'=' * 20}\n"))
 
 
@@ -338,10 +339,11 @@ if __name__ == "__main__":
                 # unified call for both specialized and SemTab
                 run_eval(
                     model=refined_model,
+                    model_name=model_name,
                     dataset_name=name,
                     batch_size=batch,
                     prediction_mode=mode,
                     sample_size=sample_size,
-                    seed = 42,
-                    save_confidence=True       #TODO turn on after tuning runs
+                    seed = seed,
+                    save_confidence=save_conf       #TODO turn on after tuning runs
                 )

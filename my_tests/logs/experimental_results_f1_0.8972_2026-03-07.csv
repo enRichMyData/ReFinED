@@ -1,0 +1,21 @@
+timestamp,dataset,mode,model,batch_size,total_rows_in_gt,n_samples_tested,nil_count,tp,fp,fn,accuracy,precision,recall,f1_score,peak_vram_gb,throughput_s,total_time_s
+
+--- STARTING MODE: CELL ---
+
+
+--- Mode: cell | Batch Size: 32 ---
+
+2026-03-07 21:53:45,companies,cell,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,0,859,14,141,0.8590,0.9840,0.8590,0.9172,1.23,118.35,8.45
+2026-03-07 21:53:54,movies,cell,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,0,642,78,358,0.6420,0.8917,0.6420,0.7465,1.49,113.47,8.81
+2026-03-07 21:53:57,SN,cell,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,229,333,12,667,0.3330,0.9652,0.3330,0.4952,1.09,317.00,3.15
+2026-03-07 21:54:45,Round1_T2D,cell,fine_tuned_models/merged_full/f1_0.8972,32,8418,8316,339,4980,714,3336,0.5988,0.8746,0.5988,0.7109,1.69,176.38,47.15
+
+--- STARTING MODE: ROW ---
+
+
+--- Mode: row | Batch Size: 32 ---
+
+2026-03-07 21:54:56,companies,row,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,0,892,7,108,0.8920,0.9922,0.8920,0.9394,2.48,91.32,10.95
+2026-03-07 21:55:03,movies,row,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,0,905,5,95,0.9050,0.9945,0.9050,0.9476,2.74,133.60,7.49
+2026-03-07 21:55:12,SN,row,fine_tuned_models/merged_full/f1_0.8972,32,1000,1000,229,348,14,652,0.3480,0.9613,0.3480,0.5110,2.33,112.77,8.87
+2026-03-07 21:55:54,Round1_T2D,row,fine_tuned_models/merged_full/f1_0.8972,32,8418,8316,339,3789,373,4527,0.4556,0.9104,0.4556,0.6073,4.37,198.95,41.80

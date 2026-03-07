@@ -61,9 +61,8 @@ def get_dated_filename(model_name="wikipedia_model_with_numbers"):
     log_dir = "my_tests/logs"
     os.makedirs(log_dir, exist_ok=True)
     date_str = datetime.now().strftime("%Y-%m-%d")
-    short_model = model_name.replace("wikipedia_model_with_numbers", "wiki")
+    short_model = os.path.basename(model_name).replace("wikipedia_model_with_numbers", "wiki")
     return f"{log_dir}/experimental_results_{short_model}_{date_str}.csv"
-
 
 def add_log_divider(message="", model_name="wikipedia_model_with_numbers"):
     """Adds a visual separator row to the CSV log."""
