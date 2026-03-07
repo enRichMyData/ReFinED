@@ -31,9 +31,9 @@ DATASET_FILES = {
 }
 
 
-def save_confidence_scores(spans, truths, dataset_name, prediction_mode):
+def save_confidence_scores(spans, truths, dataset_name, prediction_mode, model_name="wikipedia_model_with_numbers"):
     """Saves per-sample confidence scores and correctness labels for PR curve analysis."""
-    conf_log_file = get_dated_filename().replace("experimental_results", "confidence_scores")
+    conf_log_file = get_dated_filename(model_name).replace("experimental_results", "confidence_scores")
 
     rows = []
     for pred_spans, truth_qids in zip(spans, truths):
@@ -208,7 +208,7 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
 def run_refined_eval(
     model, texts, truths, batch_size, dataset_name,
     prediction_mode, model_name, meta,
-    save_confidence=True, verbose=False,
+    save_confidence=False, verbose=False,
     sample_size=None, seed=42
 ):
     # 1. Optional sampling
@@ -230,7 +230,7 @@ def run_refined_eval(
 
     # save confidence scores for PR curve analysis
     if save_confidence:
-        save_confidence_scores(spans, truths, dataset_name, prediction_mode)
+        save_confidence_scores(spans, truths, dataset_name, prediction_mode, model_name)
 
     # 3. Resource Metrics (VRAM & Speed)
     peak_vram = 0
@@ -265,6 +265,7 @@ def run_eval(
         batch_size,
         prediction_mode="cell",
         sample_size=None,
+        seed=42,
         save_confidence=True
 ):
     print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{dataset_name}' ...")
@@ -283,7 +284,7 @@ def run_eval(
     run_refined_eval(
         model, texts, truths, batch_size, dataset_name,
         prediction_mode, "wikipedia_model_with_numbers", meta,
-        save_confidence, False, sample_size, False
+        save_confidence, False, sample_size, seed
     )
 
 
@@ -310,6 +311,7 @@ if __name__ == "__main__":
 
 
     sample_size = 1000
+    seed = 42
     device = "cpu"
     model = "wikipedia_model_with_numbers"
     refined_model = load_model(device=device, entity_set="wikidata", model=model, use_precomputed=False)
@@ -320,12 +322,12 @@ if __name__ == "__main__":
 
     # === PREDICTION MODE SELECTION ===
     for mode in MODES:
-        add_log_divider(f"STARTING MODE: {mode.upper()}")
+        add_log_divider(f"STARTING MODE: {mode.upper()}", model)
 
 
         # === BATCH SIZE SELECTION ===
         for batch in BATCH_SIZES:
-            add_log_divider(f"Mode: {mode} | Batch Size: {batch}")
+            add_log_divider(f"Mode: {mode} | Batch Size: {batch}", model)
             print(bolden(f"\n\n\n{'=' * 20} BATCH SIZE: {batch} {'=' * 20}\n"))
 
 
@@ -340,134 +342,6 @@ if __name__ == "__main__":
                     batch_size=batch,
                     prediction_mode=mode,
                     sample_size=sample_size,
+                    seed = 42,
                     save_confidence=True       #TODO turn on after tuning runs
                 )
-
-#                 # OLD EVAL CALLS
-#                 # ==== Specialized Datasets ====
-#
-#                 # Companies
-#                 print(bolden(f"\n\n{'#' * 15} [ Companies ] {'#' * 15}"))
-#                 run_eval_specialized(
-#                     model=refined_model,
-#                     dataset_name="companies",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # NOTE !
-#                 # 'movies' dataset is HIGHLY affected by 'cell' vs 'row' prediction, with 'row' giving MUCH better result
-#
-#                 # Movies
-#                 print(bolden(f"\n\n{'#' * 15} [ Movies ] {'#' * 15}"))
-#                 run_eval_specialized(
-#                     model=refined_model,
-#                     dataset_name="movies",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # Spend Network (SN)
-#                 print(bolden(f"\n\n{'#'*15} [ Spend Network (SN) ] {'#'*15}"))
-#                 run_eval_specialized(
-#                     model=refined_model,
-#                     dataset_name="SN",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # === SemTab Datasets ===
-#
-#                 # Round1_T2D
-#                 print(bolden(f"\n\n{'#'*15} [ Round1_T2D ] {'#'*15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="Round1_T2D",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # Round3_2019
-#                 print(bolden(f"\n\n{'#'*15} [ Round3_2019 ] {'#'*15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="Round3_2019",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # Round4_2020
-#                 print(bolden(f"\n\n{'#'*15} [ Round4_2020 ] {'#'*15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="Round4_2020",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # 2T_Round4
-#                 print(bolden(f"\n\n{'#' * 15} [ 2T_Round4 ] {'#' * 15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="2T_Round4",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # HTR1
-#                 print(bolden(f"\n\n{'#' * 15} [ HTR1 ] {'#' * 15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="HTR1",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # HTR2
-#                 print(bolden(f"\n\n{'#' * 15} [ HTR2 ] {'#' * 15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="HTR2",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # HardTablesR2
-#                 print(bolden(f"\n\n{'#' * 15} [ HardTablesR2 ] {'#' * 15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="HardTablesR2",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )
-#
-#                 # HardTablesR3
-#                 print(bolden(f"\n\n{'#' * 15} [ HardTablesR3 ] {'#' * 15}"))
-#                 run_eval_generic(
-#                     model=refined_model,
-#                     dataset_name="HardTablesR3",
-#                     batch_size=batch,
-#                     prediction_mode=prediction_mode,
-#                     verbose=False,
-#                     sample_size=sample_size
-#                 )

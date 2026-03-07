@@ -56,15 +56,18 @@ class EvalMetrics:
     fp: int
     fn: int
 
-def get_dated_filename():
-    """Generates a filename with the current date and time for logging."""
+def get_dated_filename(model_name="wikipedia_model_with_numbers"):
+    """Generates a dated filename for logging results, based on the model name."""
+    log_dir = "my_tests/logs"
+    os.makedirs(log_dir, exist_ok=True)
     date_str = datetime.now().strftime("%Y-%m-%d")
-    return f"my_tests/logs/experimental_results_{date_str}.csv"
+    short_model = model_name.replace("wikipedia_model_with_numbers", "wiki")
+    return f"{log_dir}/experimental_results_{short_model}_{date_str}.csv"
 
 
-def add_log_divider(message=""):
+def add_log_divider(message="", model_name="wikipedia_model_with_numbers"):
     """Adds a visual separator row to the CSV log."""
-    log_file = get_dated_filename()
+    log_file = get_dated_filename(model_name)
     file_exists = os.path.isfile(log_file)
 
     with open(log_file, mode='a', newline='') as f:
@@ -88,7 +91,7 @@ def add_log_divider(message=""):
 
 def log_results_to_csv(model_name, dataset_name, mode, batch_size,
                        metrics: EvalMetrics, performance, meta: DatasetMetadata):
-    log_file = get_dated_filename()
+    log_file = get_dated_filename(model_name)
 
     # Define header
     header = [
