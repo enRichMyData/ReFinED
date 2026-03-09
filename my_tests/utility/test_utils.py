@@ -4,6 +4,7 @@ import torch
 # logging
 import os
 import csv
+import glob
 from datetime import datetime
 
 
@@ -55,6 +56,14 @@ class EvalMetrics:
     tp:  int
     fp: int
     fn: int
+
+def get_latest_log(model_name="wikipedia_model_with_numbers", log_dir="my_tests/logs"):
+    """Returns the most recent log file for a given model, or today's if none exist."""
+    short_model = os.path.basename(model_name).replace("wikipedia_model_with_numbers", "wiki")
+    pattern = os.path.join(log_dir, f"experimental_results_{short_model}_*.csv")
+    files = sorted(glob.glob(pattern), reverse=True)
+    if files: return files[0]
+    return get_dated_filename(model_name)
 
 def get_dated_filename(model_name="wikipedia_model_with_numbers"):
     """Generates a dated filename for logging results, based on the model name."""
