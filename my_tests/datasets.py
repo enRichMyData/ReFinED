@@ -13,7 +13,7 @@ from my_tests.accuracy import measure_accuracy
 from my_tests.benchmark import print_environment_info
 from my_tests.utility.test_utils import (
     load_model, run_refined_batch,       # model
-    bolden,                              # style
+    bolden, red_info, green_info,        # style
     log_results_to_csv, add_log_divider, # logging 1
     DatasetMetadata, get_dated_filename  # logging 2
 )
@@ -208,7 +208,7 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
 def run_refined_eval(
     model, texts, truths, batch_size, dataset_name,
     prediction_mode, model_name, meta,
-    save_confidence=False, verbose=False,
+    save_confidence=False, log=False, verbose=False,
     sample_size=None, seed=42
 ):
     # 1. Optional sampling
@@ -256,18 +256,20 @@ def run_refined_eval(
     metrics = measure_accuracy(spans, truths, verbose)
 
     # logging
-    log_results_to_csv(model_name,  dataset_name, prediction_mode, batch_size, metrics, perf_data, meta)
+    if log:
+        log_results_to_csv(model_name,  dataset_name, prediction_mode, batch_size, metrics, perf_data, meta)
 
 
 def run_eval(
-        model,
-        model_name,
-        dataset_name,
-        batch_size,
-        prediction_mode="cell",
-        sample_size=None,
-        seed=42,
-        save_confidence=True
+        model: object,
+        model_name: str,
+        dataset_name: str,
+        batch_size: int,
+        prediction_mode: str ="cell",
+        sample_size: int = None,
+        seed: int =42,
+        log: bool = False,
+        save_confidence: bool = False
 ):
     print(f"[{datetime.now():%H:%M:%S}] Starting processing: '{dataset_name}' ...")
 
@@ -285,7 +287,8 @@ def run_eval(
     run_refined_eval(
         model, texts, truths, batch_size, dataset_name,
         prediction_mode, model_name, meta,
-        save_confidence, False, sample_size, seed
+        save_confidence, log, False, # <- verbose
+        sample_size, seed
     )
 
 
@@ -313,22 +316,25 @@ if __name__ == "__main__":
 
     sample_size = 1000
     seed = 42
-    save_conf = True
-    device = "cpu"
+    save_conf = False
+    logging = False
+    device = "gpu"
     model_name = "wikipedia_model_with_numbers"
     refined_model = load_model(device=device, entity_set="wikidata", model=model_name, use_precomputed=False)
 
     # loop + environment
     print_environment_info(device=device, batch=True, batch_size=None)
+    print(bolden(f"\nLogging {green_info('ENABLED') if logging else red_info('DISABLED')} ")+
+          bolden(f"| Confidence Saving {green_info('ENABLED') if save_conf else red_info('DISABLED')}"))
 
     # === PREDICTION MODE SELECTION ===
     for mode in MODES:
-        add_log_divider(f"STARTING MODE: {mode.upper()}", model_name)
+        if logging: add_log_divider(f"STARTING MODE: {mode.upper()}", model_name)
 
 
         # === BATCH SIZE SELECTION ===
         for batch in BATCH_SIZES:
-            add_log_divider(f"Mode: {mode} | Batch Size: {batch}", model_name)
+            if logging: add_log_divider(f"Mode: {mode} | Batch Size: {batch}", model_name)
             print(bolden(f"\n\n\n{'=' * 20} BATCH SIZE: {batch} {'=' * 20}\n"))
 
 
@@ -345,5 +351,6 @@ if __name__ == "__main__":
                     prediction_mode=mode,
                     sample_size=sample_size,
                     seed = seed,
+                    log=logging,
                     save_confidence=save_conf       #TODO turn on after tuning runs
                 )

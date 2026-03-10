@@ -34,6 +34,10 @@ def cyan_info(text: str):
 def blue_info(text: str):
     """Wraps text in a blue bold info style."""
     return bcolors.OKBLUE + bcolors.BOLD + text + bcolors.ENDC
+
+def red_info(text: str):
+    """Wraps text in a red bold info style."""
+    return bcolors.FAIL + bcolors.BOLD + text + bcolors.ENDC
 #-----------------------------------------------
 
 
