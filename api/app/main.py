@@ -50,7 +50,7 @@ async def request_id_middleware(request: Request, call_next):
 # ======================================
 @app.get("/health", tags=["Health"])
 def health():
-    return {"status": "ok", "api": "ReFinE"}
+    return {"status": "ok", "api": "ReFinED"}
 
 if __name__ == "__main__":
     import uvicorn
