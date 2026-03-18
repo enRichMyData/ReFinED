@@ -155,7 +155,6 @@ def run_analysis(model_name="wikipedia_model_with_numbers"):
 
 
 if __name__ == "__main__":
-    # optionally pass model name as argument
-    # e.g. python log_analysis.py f1_0.8972
-    model = sys.argv[1] if len(sys.argv) > 1 else "wikipedia_model_with_numbers"
+    model = "wikipedia_model_with_numbers"
+    # model = "fine_tuned_models/merged_full/f1_0.8972"
     run_analysis(model)
