@@ -1,8 +1,9 @@
-from my_tests.datasets import load_dataset_config, build_eval_samples, clean_qids
+from my_tests.datasets import load_dataset_config, clean_qids
 from my_tests.utility.test_utils import load_model, run_refined_batch
 from pathlib import Path
-import csv
+import pandas as pd
 import random
+import csv
 
 
 # CONFIG
@@ -12,6 +13,7 @@ SAMPLE_SIZE = 200
 SEED = 42
 BATCH_SIZE = 32
 OUTPUT_FILE = "my_tests/logs/error_analysis.csv"
+USE_EXISTING_CSV = True
 # ================================================================
 
 
@@ -185,9 +187,7 @@ def find_semantic_drift(cell_results, row_results):
     """
     drift_cases = []
     for cell, row in zip(cell_results, row_results):
-        if (cell["cell_value"] == row["cell_value"]
-                and cell["is_correct"] == 1
-                and row["is_correct"] == 0):
+        if cell["cell_value"] == row["cell_value"] and cell["is_correct"] == 1 and row["is_correct"] == 0:
             drift_cases.append({
                 "cell_value": cell["cell_value"],
                 "input_cell": cell["input_text"],
@@ -207,6 +207,7 @@ def save_results(all_results, output_file=OUTPUT_FILE):
     if not all_results:
         print("No results to save.")
         return
+
     keys = all_results[0].keys()
     with open(output_file, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=keys)
@@ -250,32 +251,36 @@ def print_category_summary(categories, drift_cases):
 
 
 if __name__ == "__main__":
-    # Load model
-    model = load_model(
-        device="gpu",
-        entity_set="wikidata",
-        model="wikipedia_model_with_numbers",
-        use_precomputed=False
-    )
 
-    all_results_cell = []
-    all_results_row = []
+    # ── Read existing results ──
+    if USE_EXISTING_CSV:
+        print(f"[INFO] Reading existing results from {OUTPUT_FILE}")
+        df = pd.read_csv(OUTPUT_FILE)
+        print(f"Loaded {len(df)} rows across {df['dataset'].nunique()} datasets")
+        all_results = df.to_dict("records")
+        all_results_cell = [r for r in all_results if r["mode"] == "cell"]
+        all_results_row  = [r for r in all_results if r["mode"] == "row"]
 
-    # Run both modes on target datasets
-    for dataset_name in TARGET_DATASETS:
-        cell_results = run_error_analysis(model, dataset_name, mode="cell")
-        row_results = run_error_analysis(model, dataset_name, mode="row")
-        all_results_cell.extend(cell_results)
-        all_results_row.extend(row_results)
+    # ── Run new inference ──
+    else:
+        model = load_model(
+            device="gpu",
+            entity_set="wikidata",
+            model="wikipedia_model_with_numbers",
+            use_precomputed=False
+        )
+        all_results_cell = []
+        all_results_row  = []
+        for dataset_name in TARGET_DATASETS:
+            cell_results = run_error_analysis(model, dataset_name, mode="cell")
+            row_results  = run_error_analysis(model, dataset_name, mode="row")
+            all_results_cell.extend(cell_results)
+            all_results_row.extend(row_results)
+        all_results = all_results_cell + all_results_row
+        save_results(all_results)
 
-    # Extract categories
-    all_results = all_results_cell + all_results_row
+    # ── Analysis on above choice ──
     categories = extract_interesting_cases(all_results)
     drift_cases = find_semantic_drift(all_results_cell, all_results_row)
-
-    # Print summary
     print_category_summary(categories, drift_cases)
-
-    # Save full results
-    save_results(all_results)
-    print("\nDone. Check error_analysis.csv for full details.")
+    print("\nDone.")
