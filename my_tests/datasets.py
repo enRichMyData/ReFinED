@@ -178,9 +178,15 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
                         text = cell
 
                     # row-level mode (context)
-                    else:
+                    elif prediction_mode == "row":
                         context = rows[r][:c] + rows[r][c + 1:]
                         text = f"{cell} | {' | '.join(context)}"
+
+                    # column header mode (w/ column label)
+                    elif prediction_mode == "label":
+                        col_header = rows[0][c] if len(rows) > 0 and c < len(rows[0]) else ""
+                        col_header = col_header.strip() if col_header and col_header.lower() not in ["nan", "none", ""] else ""
+                        text = f"{col_header}: {cell}" if col_header else cell
 
 
                     # after processing:  add to lists
@@ -294,8 +300,8 @@ def run_eval(
 
 if __name__ == "__main__":
     # Settings
-    BATCH_SIZES = [8, 16, 32, 64]
-    MODES = ["cell"] + ["row"]
+    BATCH_SIZES = [32] # [8, 16, 32, 64]
+    MODES = ["cell", "label"] # + ["row"]
     DATASETS = [
         # Specialized datasets
         ("companies", "special"),
@@ -314,10 +320,10 @@ if __name__ == "__main__":
     ]
 
 
-    sample_size = 1000
+    sample_size = None
     seed = 42
     save_conf = False
-    logging = False
+    logging = True
     device = "gpu"
     model_name = "wikipedia_model_with_numbers"
     refined_model = load_model(device=device, entity_set="wikidata", model=model_name, use_precomputed=False)
