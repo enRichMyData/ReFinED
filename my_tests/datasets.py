@@ -88,9 +88,8 @@ def load_dataset_config(dataset_name):
     # 1. EL Challenge (HTR) logic
     if "HTR" in dataset_name:
         base = f"{DATA_FOLDER}/EL_challenge/{dataset_name}"
-        tables_folder = f"{base}/tables"
         gt = pd.read_csv(f"{base}/gt/cea_gt.csv", header=None, names=["table", "row", "col", "qid"])
-        return tables_folder, gt
+        return f"{base}/tables", gt
 
     # 2. Specialized (SN, Movies, Companies) logic
     if dataset_name in ["SN", "movies", "companies"]:
@@ -112,9 +111,10 @@ def load_dataset_config(dataset_name):
     # Handle weird T2D column ordering
     t_cols = ["table", "col", "row"] if dataset_name in ["Round1_T2D", "Round3_2019"] else ["table", "row", "col"]
     targets = pd.read_csv(targets_file, header=None, names=t_cols)
-    gt = pd.read_csv(gt_file, header=None, names=["table", "row", "col", "qid"])
+    gt      = pd.read_csv(gt_file,      header=None, names=["table", "row", "col", "qid"])
 
-    merged = targets.merge(gt, on=["table", "row", "col"], how="left")
+    # merges on inner join - intersection of targets and gt ensuring evaluatiuon
+    merged = targets.merge(gt, on=["table", "row", "col"], how="inner")
     return f"{base}/tables", merged
 
 
@@ -136,24 +136,24 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
 
     # iterate through tables
     for table_path in glob.glob(f"{tables_folder}/*.csv"):
+        if Path(table_path).name.startswith("._"):
+            continue
+
         full_stem = Path(table_path).stem
         total_files += 1
 
-        # matching logic
         matched_id = None
         if full_stem in gt_lookup:
             matched_id = full_stem
         else:
-            # fallback for T2D/Round 1 where filenames have extra timestamps/hashes
             for gt_id in gt_ids:
                 if full_stem.startswith(gt_id):
                     matched_id = gt_id
                     break
-
-        if not matched_id:
+        if matched_id is None:
             continue
-        # --------------------------------
 
+        golds_df = gt_lookup[matched_id]
         files_processed += 1
 
         # using header none because semtab treats headers as data rows sometimes
@@ -161,44 +161,49 @@ def build_eval_samples(table_to_truths, tables_folder, prediction_mode):
         rows = df_table.values.tolist()
 
         # get relevant Ground Truth rows
-        golds = gt_lookup[matched_id].copy()
-        golds["qid_list"] = golds["qid"].apply(clean_qids)
+        golds_df = golds_df.copy()
+        golds_df["qid_list"] = golds_df["qid"].apply(clean_qids)
 
-        for gold_row in golds.itertuples(index=False):
+        for gold_row in golds_df.itertuples(index=False):
             try:
                 r = int(gold_row.row)
                 c = int(gold_row.col)
 
                 # bound check
-                if 0 <=  r < len(rows) and 0 <= c < len(rows[r]):
-                    cell = rows[r][c]
+                if not (0 <= r < len(rows) and 0 <= c < len(rows[r])):
+                    continue
 
-                    # cell-level mode
-                    if prediction_mode == "cell":
-                        text = cell
+                cell = rows[r][c]
 
-                    # row-level mode (context)
-                    elif prediction_mode == "row":
-                        context = rows[r][:c] + rows[r][c + 1:]
-                        text = f"{cell} | {' | '.join(context)}"
+                # cell-level mode
+                if prediction_mode == "cell":
+                    text = cell
 
-                    # column header mode (w/ column label)
-                    elif prediction_mode == "label":
-                        col_header = rows[0][c] if len(rows) > 0 and c < len(rows[0]) else ""
-                        col_header = col_header.strip() if col_header and col_header.lower() not in ["nan", "none", ""] else ""
-                        text = f"{col_header}: {cell}" if col_header else cell
+                # row-level mode (context)
+                elif prediction_mode == "row":
+                    context = rows[r][:c] + rows[r][c + 1:]
+                    text = f"{cell} | {' | '.join(context)}"
 
+                # label mode (w/ column header)
+                elif prediction_mode ==  "label":
+                    col_header = rows[0][c] if rows and c < len(rows[0]) else ""
+                    col_header = col_header.strip() \
+                        if col_header and col_header.lower() not in ["nan", "none", ""] else ""
+                    text = f"{col_header}: {cell}" if col_header else cell
+                else:
+                    text = cell  # fallback
 
-                    # after processing:  add to lists
-                    texts.append(text)
-                    truths.append(gold_row.qid_list)
+                # after processing:  add to lists
+                texts.append(text)
+                truths.append(gold_row.qid_list)
+
             except (ValueError, IndexError):
                 continue
 
 
     # stat information
     build_duration = time.perf_counter() - s_build
-    print(f"[{prediction_mode.upper()}] "
+    print(f"[{datetime.now():%H:%M:%S}] "
           f"Matched {files_processed:,}/{total_files:,} tables | "
           f"Samples: {len(texts):,} | "
           f"Time: {build_duration:.2f}s"
@@ -301,7 +306,7 @@ def run_eval(
 if __name__ == "__main__":
     # Settings
     BATCH_SIZES = [32] # [8, 16, 32, 64]
-    MODES = ["cell", "label"] # + ["row"]
+    MODES = ["cell", "label"] #+ ["cell", "label", "row"]
     DATASETS = [
         # Specialized datasets
         ("companies", "special"),
@@ -310,19 +315,19 @@ if __name__ == "__main__":
 
         # SemTab datasets
         ("Round1_T2D", "generic"),
-        ("Round3_2019", "generic"),
-        ("Round4_2020", "generic"),
-        ("2T_Round4", "generic"),
         ("HTR1", "generic"),
         ("HTR2", "generic"),
         ("HardTablesR2", "generic"),
-        ("HardTablesR3", "generic")
+        ("HardTablesR3", "generic"),
+        ("2T_Round4", "generic"),
+        ("Round3_2019", "generic"),
+        ("Round4_2020", "generic")
     ]
 
 
     sample_size = None
-    seed = 42
-    save_conf = False
+    seed = 1
+    save_conf = True
     logging = True
     device = "gpu"
     model_name = "wikipedia_model_with_numbers"
