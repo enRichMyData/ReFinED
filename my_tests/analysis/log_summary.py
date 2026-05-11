@@ -72,7 +72,8 @@ def quick_thesis_check(file_path):
 
 # --- RUN ---
 SAVE_TO_FILE = False
-model = "wikipedia_model_with_numbers"
+model = "wikipedia_model_with_numbers"      # <-- baseline wiki model
+#model = "f1_0.8972_2026-03-07"             # <-- merged_full
 
 log_file = get_latest_log(model)
 quick_thesis_check(log_file)

@@ -65,7 +65,7 @@ class EvalMetrics:
 def get_latest_log(model_name="wikipedia_model_with_numbers", log_dir="my_tests/logs"):
     """Returns the most recent RAW log file (ignoring summaries)."""
     short_model = os.path.basename(model_name).replace("wikipedia_model_with_numbers", "wiki")
-    pattern = os.path.join(log_dir, f"experimental_results_{short_model}_*.csv")
+    pattern = os.path.join(log_dir, f"experimental_results_{short_model}*.csv")
 
     # Get all matching files
     files = glob.glob(pattern)
