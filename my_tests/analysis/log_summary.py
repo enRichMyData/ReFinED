@@ -52,7 +52,7 @@ def quick_thesis_check(file_path):
             logger("-" * 85)
 
         logger("\n" + "=" * 100)
-        logger("AVERAGE STATS (For Table 5.5: Efficiency vs Accuracy)")
+        logger("AVERAGE STATS")
         logger("-" * 100)
         summary = df.groupby('mode')[['f1_score', 'throughput_s', 'peak_vram_gb']].mean()
         logger(summary.to_string(formatters={
