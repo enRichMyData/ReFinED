@@ -84,10 +84,10 @@ if __name__ == "__main__":
     df = load_latest_confidence_file(filepath)
 
     for mode in ["cell", "row"]:
-        # Specialized
+        # Specialised
         spec_ids = ["companies", "movies", "SN"]
-        plot_confidence_results(df, spec_ids, GLOBAL_COLORS, f"- Specialized ({mode})", mode=mode) \
-            .savefig(f"my_tests/logs/confidence_specialized_{mode}.png", dpi=150, bbox_inches="tight")
+        plot_confidence_results(df, spec_ids, GLOBAL_COLORS, f"- Specialised ({mode})", mode=mode) \
+            .savefig(f"my_tests/logs/confidence_specialised_{mode}.png", dpi=150, bbox_inches="tight")
 
         # SemTab
         semtab_ids = ["Round1_T2D", "Round3_2019", "Round4_2020", "HardTablesR2", "HardTablesR3"]
