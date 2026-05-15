@@ -1,44 +1,26 @@
 # my_tests
+Evaluation suite for benchmarking ReFinED on SemTab and specialized entity linking datasets.
 
-Evaluation suite for benchmarking ReFinEd on SemTab and specialized entity linking datasets.
+## Core Scripts
+* **`datasets.py`**: Main evaluation entry point (inference and scoring).
+* **`run_refined.py`**: CLI for manual inference runs.
+* **`benchmark.py`**: Profiling of latency, memory, and hardware.
+* **`accuracy.py`**: core metric logic for Precision, Recall, and F1.
 
----
+## Analysis & Utilities
+* **`analysis/`**: Tools for log aggregation (`log_summary.py`), PR-curves (`pr_curve.py`), and error analysis (`qualitative_analysis.py`).
+* **`utility/`**: Shared logic for model loading, batching, and argument parsing.
 
-## Scripts
+## Data (`data/`)
+* **Specialised**: Pre-configured folders for `companies`, `movies`, `SN`, and `EL_challenge`.
+* **Benchmarks**: To run SemTab, manually add datasets to `data/datasets/` (e.g., `data/datasets/Round4_2020/`).
+* **Note**: Large benchmark files are excluded from Git due to size.
 
-| File | Description |
-|------|-------------|
-| `datasets.py` | Main evaluation. Loads datasets, runs ReFinED, optionally saves per-sample confidence scores for PR analysis. |
-| `accuracy.py` | Computes accuracy, precision, recall, F1 from predictions. |
-| `benchmark.py` | Prints environment info and provides full benchmarking (timing, memory, profiling). |
-| `pr_curve.py` | Generates Precision-Recall and F1 vs confidence threshold plots from saved confidence scores. |
-| `log_analysis.py` | Summarizes CSV logs from evaluation runs, including per-mode metrics. |
-| `error_analysis.py` | Qualitative error analysis to identify specific prediction faults, including NIL errors. |
+## Logs & Visuals (`logs/`)
+Contains data logs for analysis and visualisations:
+* **Evaluation Metrics**: `experimental_results_*.csv` files containing per-dataset raw metrics and human-readable summaries.
+* **Fine-tuning**: `fine_tuning_logs.md` (hyperparameters and model performance) and `fine_tune_summary.pdf`.
+* **Error Analysis**: `error_analysis.csv` records specific prediction faults for qualitative review.
+* **Visualisations**: Generated Precision-Recall and F1-curve plots (`confidence_*.png`) for all evaluation modes.
 
-> Note: some additional CLI scripts exists for convenience, but are not listed.
-
----
-
-## Utilities (`utility/`)
-
-| File | Description |
-|------|-------------|
-| `test_utils.py` | Shared utilities: model loading, batch inference, logging, dataclasses. |
-
----
-
-## Logs (`logs/`)
-
-- `experimental_results_YYYY-MM-DD.csv` — per-dataset metrics  
-- `confidence_scores_YYYY-MM-DD.csv` — per-sample confidence scores for PR curves  
-- PR curve figures: `confidence_specialized_cell.png`, `confidence_semtab_row.png`, etc.  
-
-> Run `datasets.py` before `pr_curve.py`. Use `save_confidence=False` for tuning runs to avoid polluting logs.
-
----
-
-## Supported Datasets
-
-**Specialized:** `companies`, `movies`, `SN`  
-**SemTab:** `Round1_T2D`, `Round3_2019`, `Round4_2020`, `2T_Round4`, `HardTablesR2`, `HardTablesR3`  
-**EL Challenge:** `HTR1`, `HTR2`
+> **Workflow:** Run `datasets.py` first to generate logs. Use `save_confidence=False` during rapid testing to save disk space.
